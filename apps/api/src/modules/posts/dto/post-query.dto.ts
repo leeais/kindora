@@ -1,0 +1,13 @@
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
+
+import { BaseQuerySchema } from '@/common/dto/pagination.dto';
+import { PostStatus } from '@/db/generated/prisma/client';
+
+export const PostQuerySchema = BaseQuerySchema.extend({
+  title: z.string().optional(),
+  status: z.nativeEnum(PostStatus).optional(),
+  authorId: z.string().uuid().optional(),
+});
+
+export class PostQueryDto extends createZodDto(PostQuerySchema) {}

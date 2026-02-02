@@ -6,11 +6,13 @@ import { ZodValidationPipe } from 'nestjs-zod';
 
 import { AppModule } from './app.module';
 
+import { loggerConfig } from '@/common/configs/logger.config';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 
-
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: loggerConfig,
+  });
   app.use(cookieParser());
 
   app.useGlobalPipes(new ZodValidationPipe());

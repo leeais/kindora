@@ -1,0 +1,153 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+
+import { CreatePostDto } from './dto/create-post.dto';
+import { PostQueryDto } from './dto/post-query.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+
+import { buildWhereClause } from '@/common/utils/filter.util';
+import { paginate } from '@/common/utils/paginate.util';
+import { Prisma } from '@/db/generated/prisma/client';
+import { PrismaService } from '@/db/prisma.service';
+
+@Injectable()
+export class PostsService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(authorId: string, data: CreatePostDto) {
+    const { mediaIds, ...postData } = data;
+
+    return this.prisma.lumisPost.create({
+      data: {
+        ...postData,
+        authorId,
+        medias: mediaIds
+          ? {
+              connect: mediaIds.map((id) => ({ id })),
+            }
+          : undefined,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        medias: true,
+      },
+    });
+  }
+
+  async findAll(query: PostQueryDto) {
+    const where = buildWhereClause(query, {
+      title: 'contains',
+    });
+
+    if (query.search) {
+      where['OR'] = [
+        { title: { contains: query.search, mode: 'insensitive' } },
+        { content: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    return paginate(
+      this.prisma.lumisPost,
+      {
+        where,
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              avatar: true,
+            },
+          },
+          medias: true,
+        },
+      },
+      {
+        page: query.page,
+        limit: query.limit,
+        sortBy: query.sortBy,
+        sortOrder: query.sortOrder,
+      },
+    );
+  }
+
+  async findOne(id: string) {
+    const post = await this.prisma.lumisPost.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        proofs: true,
+        bankDetails: true,
+        medias: true,
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Bài đăng với ID "${id}" không tồn tại`);
+    }
+
+    return post;
+  }
+
+  async update(id: string, data: UpdatePostDto) {
+    const { mediaIds, ...postData } = data;
+
+    try {
+      return await this.prisma.lumisPost.update({
+        where: { id },
+        data: {
+          ...postData,
+          medias: mediaIds
+            ? {
+                set: [], // Gỡ bỏ các link cũ
+                connect: mediaIds.map((id) => ({ id })),
+              }
+            : undefined,
+        },
+        include: {
+          medias: true,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Bài đăng với ID "${id}" không tồn tại`);
+      }
+      throw error;
+    }
+  }
+
+  async remove(id: string) {
+    try {
+      return await this.prisma.lumisPost.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Bài đăng với ID "${id}" không tồn tại`);
+      }
+      throw error;
+    }
+  }
+}
