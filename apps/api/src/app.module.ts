@@ -13,6 +13,7 @@ import { AppQueueModule } from './modules/shared/queue/queue.module';
 import { validate } from '@/common/configs/env.config';
 import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
 import { PrismaModule } from '@/db/prisma.module';
+import { DonationsModule } from '@/modules/donations/donations.module';
 import { PostsModule } from '@/modules/posts/posts.module';
 import { UploadModule } from '@/modules/uploads/upload.module';
 import { UsersModule } from '@/modules/users/users.module';
@@ -32,6 +33,7 @@ import { UsersModule } from '@/modules/users/users.module';
     UsersModule,
     PostsModule,
     UploadModule,
+    DonationsModule,
     AppQueueModule,
   ],
   controllers: [AppController],
