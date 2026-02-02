@@ -9,7 +9,7 @@ import { PrismaClient } from './generated/prisma/client';
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor(private configService: ConfigService) {
     const pool = new Pool({
-      connectionString: configService.get<string>('KINDORA_DATABASE_URL'),
+      connectionString: configService.get<string>('DATABASE_URL'),
     });
     const adapter = new PrismaPg(pool);
     super({ adapter });

@@ -4,10 +4,15 @@
   "globalPassThroughEnv": [
     "NODE_ENV",
     "PORT",
-    "KINDORA_*",
-    "NEXT_PUBLIC_*",
-    "EXPO_PUBLIC_*",
-    "VITE_*"
+    "DATABASE_URL",
+    "JWT_ACCESS_SECRET",
+    "JWT_ACCESS_SECRET_EXPIRES_IN",
+    "JWT_REFRESH_SECRET",
+    "JWT_REFRESH_SECRET_EXPIRES_IN",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_CALLBACK_URL",
+    "FRONTEND_URL"
   ],
   "tasks": {
     "build": {

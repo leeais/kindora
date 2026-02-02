@@ -5,7 +5,15 @@ export const envSchema = z.object({
     .enum(['development', 'production', 'test', 'staging'])
     .default('development'),
   PORT: z.coerce.number().default(3000),
-  KINDORA_DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.string().url(),
+  JWT_ACCESS_SECRET: z.string(),
+  JWT_ACCESS_SECRET_EXPIRES_IN: z.string(),
+  JWT_REFRESH_SECRET: z.string(),
+  JWT_REFRESH_SECRET_EXPIRES_IN: z.string(),
+  GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  GOOGLE_CALLBACK_URL: z.string().url(),
+  FRONTEND_URL: z.string().url(),
 });
 
 export type Env = z.infer<typeof envSchema>;

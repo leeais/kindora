@@ -23,23 +23,23 @@ export async function paginate<T>(
       take: limit,
       skip,
       orderBy: options.sortBy
-        ? { [options.sortBy]: options.sortOrder }
-        : undefined,
+        ? { [options.sortBy]: options.sortOrder || 'desc' }
+        : { createdAt: 'desc' },
     }),
     model.count({ where: query.where }),
   ]);
 
-  const lastPage = Math.ceil(total / options.limit);
+  const lastPage = Math.ceil(total / limit);
 
   return {
     data,
     meta: {
       total,
       lastPage,
-      currentPage: options.page,
-      perPage: options.limit,
-      prev: options.page > 1 ? options.page - 1 : null,
-      next: options.page < lastPage ? options.page + 1 : null,
+      currentPage: page,
+      perPage: limit,
+      prev: page > 1 ? page - 1 : null,
+      next: page < lastPage ? page + 1 : null,
     },
   };
 }

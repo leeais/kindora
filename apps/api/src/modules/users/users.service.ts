@@ -13,9 +13,31 @@ import { PrismaService } from '@/db/prisma.service';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  create(createUserDto: CreateUserDto) {
+  async findByEmailOrUsername(email: string, username: string) {
+    return this.prisma.user.findFirst({
+      where: { OR: [{ email }, { username }] },
+      include: { socialAccounts: true },
+    });
+  }
+
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+      include: { socialAccounts: true },
+    });
+  }
+
+  async findByUsername(username: string) {
+    return this.prisma.user.findUnique({
+      where: { username },
+      include: { socialAccounts: true },
+    });
+  }
+
+  async create(data: CreateUserDto) {
     return this.prisma.user.create({
-      data: createUserDto,
+      data,
+      include: { socialAccounts: true },
     });
   }
 
@@ -47,6 +69,7 @@ export class UsersService {
   findOne(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
+      include: { socialAccounts: true },
     });
   }
 
