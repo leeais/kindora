@@ -36,6 +36,12 @@ export const envSchema = z.object({
   MINIO_ACCESS_KEY: z.string(),
   MINIO_SECRET_KEY: z.string(),
   MINIO_BUCKET_NAME: z.string().default('kindora-media'),
+
+  // Payment
+  PAYMENT_BANK_ID: z.string(),
+  PAYMENT_ACCOUNT_NO: z.string(),
+  PAYMENT_ACCOUNT_NAME: z.string(),
+  PAYMENT_TEMPLATE: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;

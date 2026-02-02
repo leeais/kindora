@@ -20,7 +20,11 @@
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
     "GOOGLE_CALLBACK_URL",
-    "FRONTEND_URL"
+    "FRONTEND_URL",
+    "PAYMENT_BANK_ID",
+    "PAYMENT_ACCOUNT_NO",
+    "PAYMENT_ACCOUNT_NAME",
+    "PAYMENT_TEMPLATE"
   ],
   "tasks": {
     "build": {

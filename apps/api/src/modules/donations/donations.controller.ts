@@ -30,6 +30,11 @@ export class DonationsController {
     return this.donationsService.create(user.userId, createDonationDto);
   }
 
+  @Post(':id/confirm')
+  confirm(@Param('id') id: string) {
+    return this.donationsService.confirm(id);
+  }
+
   @Get('my-donations')
   findAllByUser(
     @CurrentUser() user: Express.User,
