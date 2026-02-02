@@ -25,9 +25,11 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { ResendVerificationDto, VerifyEmailDto } from './dto/verify-email.dto';
+import { EmailVerifiedGuard } from './guards/email-verified.guard';
 
 import type { Request, Response } from 'express';
 
+import { calcExpiresAt } from '@/common/utils/token.util';
 import {
   GoogleAuthGuard,
   JwtAuthGuard,
@@ -96,7 +98,7 @@ export class AuthController {
     return this.authService.resetPassword(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
   @HttpCode(HttpStatus.OK)
   @Patch('update-password')
   async updatePassword(@Req() req: Request, @Body() dto: UpdatePasswordDto) {
@@ -160,7 +162,7 @@ export class AuthController {
     const expiresAt =
       this.configService.get<string>('JWT_REFRESH_SECRET_EXPIRES_IN') || '7d';
 
-    const maxAge = this.handleCalcExpiresAt(expiresAt);
+    const maxAge = calcExpiresAt(expiresAt);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -181,7 +183,7 @@ export class AuthController {
 
     const expiresAtRefresh =
       this.configService.get<string>('JWT_REFRESH_SECRET_EXPIRES_IN') || '7d';
-    const maxAge = this.handleCalcExpiresAt(expiresAtRefresh);
+    const maxAge = calcExpiresAt(expiresAtRefresh);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -196,30 +198,5 @@ export class AuthController {
     return res.redirect(
       `${frontendUrl}/auth/callback?accessToken=${accessToken}&expiresAt=${expiresAt}`,
     );
-  }
-
-  private handleCalcExpiresAt(value: string | number): number {
-    if (typeof value === 'number') return value;
-    const numericValue = parseInt(value.slice(0, -1));
-    const unit = value.slice(-1).toLowerCase();
-
-    let maxAge: number;
-    switch (unit) {
-      case 'd':
-        maxAge = numericValue * 24 * 60 * 60 * 1000;
-        break;
-      case 'h':
-        maxAge = numericValue * 60 * 60 * 1000;
-        break;
-      case 'm':
-        maxAge = numericValue * 60 * 1000;
-        break;
-      case 's':
-        maxAge = numericValue * 1000;
-        break;
-      default:
-        maxAge = 7 * 24 * 60 * 60 * 1000;
-    }
-    return maxAge;
   }
 }

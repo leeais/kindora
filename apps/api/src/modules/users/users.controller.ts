@@ -14,14 +14,21 @@ import {
   Inject,
 } from '@nestjs/common';
 
+
 import { AuthService } from './auth/auth.service';
+import { Roles } from './auth/decorators/roles.decorator';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
+import { EmailVerifiedGuard } from './auth/guards/email-verified.guard';
+import { OwnershipGuard } from './auth/guards/ownership.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UsersService } from './users.service';
 
 import type { Request } from 'express';
+
+import { UserRole } from '@/db/generated/prisma/client';
 
 @Controller('users')
 export class UsersController {
@@ -32,6 +39,8 @@ export class UsersController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   async create(@Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.create(createUserDto);
     await this.authService.generateVerificationCode(
@@ -42,7 +51,7 @@ export class UsersController {
     return user;
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
   @Get('me')
   async getMe(@Req() req: Request) {
     const userPayload = req.user;
@@ -57,22 +66,25 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   findAll(@Query() query: UserQueryDto) {
     return this.usersService.findAll(query);
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, OwnershipGuard)
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OwnershipGuard, EmailVerifiedGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OwnershipGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);

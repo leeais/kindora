@@ -1,4 +1,4 @@
-import type { UserRole, UserContext } from '@prisma/client';
+import { type UserContext, type UserRole } from '@/db/generated/prisma/enums';
 
 declare global {
   namespace Express {
@@ -13,6 +13,7 @@ declare global {
       activeContext?: UserContext;
       sessionId?: string;
       refreshToken?: string;
+      emailVerifiedAt?: Date | null;
     }
 
     interface Request {

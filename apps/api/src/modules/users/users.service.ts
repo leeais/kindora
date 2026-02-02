@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -6,6 +6,7 @@ import { UserQueryDto } from './dto/user-query.dto';
 
 import { buildWhereClause } from '@/common/utils/filter.util';
 import { paginate } from '@/common/utils/paginate.util';
+import { Prisma } from '@/db/generated/prisma/client';
 import { PrismaService } from '@/db/prisma.service';
 
 
@@ -73,16 +74,36 @@ export class UsersService {
     });
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return this.prisma.user.update({
-      where: { id },
-      data: updateUserDto,
-    });
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      return await this.prisma.user.update({
+        where: { id },
+        data: updateUserDto,
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Người dùng với ID "${id}" không tồn tại`);
+      }
+      throw error;
+    }
   }
 
-  remove(id: string) {
-    return this.prisma.user.delete({
-      where: { id },
-    });
+  async remove(id: string) {
+    try {
+      return await this.prisma.user.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Người dùng với ID "${id}" không tồn tại`);
+      }
+      throw error;
+    }
   }
 }

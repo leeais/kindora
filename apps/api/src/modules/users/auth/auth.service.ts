@@ -23,6 +23,7 @@ import { UpdatePasswordDto as UpdatePasswordDtoOriginal } from './dto/update-pas
 
 import type { Request } from 'express';
 
+import { calcExpiresAt } from '@/common/utils/token.util';
 import { PrismaService } from '@/db/prisma.service';
 
 @Injectable()
@@ -87,28 +88,35 @@ export class AuthService {
   }
 
   async createSession(userId: string, userAgent?: string, ipAddress?: string) {
+    const expiresAt =
+      this.configService.get<string>('JWT_REFRESH_SECRET_EXPIRES_IN') || '7d';
+    const maxAge = calcExpiresAt(expiresAt);
+
     const session = await this.prisma.session.create({
       data: {
         userId,
         refreshToken: '', // Sẽ cập nhật sau khi có RT
         userAgent,
         ipAddress,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 ngày
+        expiresAt: new Date(maxAge), // 7 ngày
       },
     });
 
-    const tokens = await this.getTokens(userId, session.id);
+    const user = await this.usersService.findOne(userId);
+    if (!user) throw new NotFoundException('Người dùng không tồn tại');
+
+    const tokens = await this.getTokens(
+      userId,
+      session.id,
+      user.role,
+      user.emailVerifiedAt || undefined,
+    );
     const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
 
-    const [user] = await Promise.all([
-      this.usersService.findOne(userId),
-      this.prisma.session.update({
-        where: { id: session.id },
-        data: { refreshToken: hashedRefreshToken },
-      }),
-    ]);
-
-    if (!user) throw new NotFoundException('Người dùng không tồn tại');
+    await this.prisma.session.update({
+      where: { id: session.id },
+      data: { refreshToken: hashedRefreshToken },
+    });
 
     const { password: _password, ...userWithoutPassword } = user;
 
@@ -134,18 +142,21 @@ export class AuthService {
       );
     }
 
-    const tokens = await this.getTokens(userId, sessionId);
+    const user = await this.usersService.findOne(userId);
+    if (!user) throw new NotFoundException('Người dùng không tồn tại');
+
+    const tokens = await this.getTokens(
+      userId,
+      sessionId,
+      user.role,
+      user.emailVerifiedAt || undefined,
+    );
     const hashedRt = await bcrypt.hash(tokens.refreshToken, 10);
 
-    const [user] = await Promise.all([
-      this.usersService.findOne(userId),
-      this.prisma.session.update({
-        where: { id: sessionId },
-        data: { refreshToken: hashedRt },
-      }),
-    ]);
-
-    if (!user) throw new NotFoundException('Người dùng không tồn tại');
+    await this.prisma.session.update({
+      where: { id: sessionId },
+      data: { refreshToken: hashedRt },
+    });
 
     const { password: _password, ...userWithoutPassword } = user;
 
@@ -418,10 +429,20 @@ export class AuthService {
     return this.createSession(user.id, userAgent, ipAddress);
   }
 
-  private async getTokens(userId: string, sessionId: string) {
+  private async getTokens(
+    userId: string,
+    sessionId: string,
+    role: string,
+    emailVerifiedAt?: Date,
+  ) {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: userId, sessionId },
+        {
+          sub: userId,
+          sessionId,
+          role,
+          emailVerifiedAt: emailVerifiedAt?.toISOString(),
+        },
         {
           secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
           expiresIn: this.configService.get('JWT_ACCESS_SECRET_EXPIRES_IN'),
