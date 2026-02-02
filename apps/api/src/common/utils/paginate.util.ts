@@ -1,3 +1,8 @@
+import {
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_DEFAULT_PAGE,
+} from '@/common/configs/pagination.config';
+
 export async function paginate<T>(
   model: any,
   query: any = {},
@@ -8,8 +13,8 @@ export async function paginate<T>(
     sortOrder?: 'asc' | 'desc';
   },
 ) {
-  const page = Math.max(1, options.page || 1);
-  const limit = Math.max(1, options.limit || 10);
+  const page = Math.max(1, options.page || PAGINATION_DEFAULT_PAGE);
+  const limit = Math.max(1, options.limit || PAGINATION_DEFAULT_LIMIT);
   const skip = (page - 1) * limit;
 
   const [data, total] = await Promise.all([

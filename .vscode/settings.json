@@ -16,5 +16,8 @@
   "typescript.suggest.autoImports": true,
   "javascript.suggest.autoImports": true,
   "prettier.requireConfig": true,
-  "files.eol": "\n"
+  "files.eol": "\n",
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma-insider"
+  }
 }

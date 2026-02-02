@@ -1,6 +1,12 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
+import {
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_DEFAULT_PAGE,
+  PAGINATION_MAX_LIMIT,
+} from '@/common/configs/pagination.config';
+
 const handleEmpty = (val: unknown) =>
   val === '' || val === null || val === undefined ? undefined : val;
 
@@ -20,15 +26,15 @@ export const PaginationSchema = z
         const coerced = Number(processed);
         return isNaN(coerced) ? undefined : coerced;
       }, z.number().int().positive().optional())
-      .default(1),
+      .default(PAGINATION_DEFAULT_PAGE),
     limit: z
       .preprocess((val) => {
         const processed = handleEmpty(val);
         if (processed === undefined) return undefined;
         const coerced = Number(processed);
         return isNaN(coerced) ? undefined : coerced;
-      }, z.number().int().positive().max(100).optional())
-      .default(10),
+      }, z.number().int().positive().max(PAGINATION_MAX_LIMIT).optional())
+      .default(PAGINATION_DEFAULT_LIMIT),
   })
   .merge(SortSchema);
 

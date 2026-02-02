@@ -5,17 +5,143 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider        = "prisma-client"
-  output          = "../src/db/generated/prisma"
-  moduleFormat    = "cjs"
+  provider     = "prisma-client"
+  output       = "../src/db/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum UserContext {
+  LUMIS
+  KINDORA
+}
+
+enum PostStatus {
+  DRAFT
+  PENDING
+  ACCEPTED
+  REJECTED
+  OPEN
+  SUSPENDED
+  REJECTED_AFTER_REPORT
+  COMPLETED
+  CLOSED
+}
+
+enum DonationStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model User {
-  id    String     @id @default(uuid())
-  email String  @unique
-  name  String?
+  id            String      @id @default(uuid())
+  email         String      @unique
+  username      String      @unique
+  password      String
+  firstName     String?
+  lastName      String?
+  age           Int?
+  country       String?     @default("VN")
+  address       String?
+  phoneNumber   String?
+  role          UserRole    @default(USER)
+  activeContext UserContext @default(KINDORA)
+  coins         Int         @default(0)
+
+  posts             LumisPost[]
+  donations         Donation[]
+  verificationCodes VerificationCode[]
+  auditLogs         AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationCode {
+  id        String   @id @default(uuid())
+  code      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String // e.g., "SIGNUP", "PASSWORD_RESET"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model LumisPost {
+  id               String     @id @default(uuid())
+  title            String
+  content          String
+  currency         String     @default("VND")
+  targetAmount     Decimal    @db.Decimal(15, 2)
+  supportReceived  Decimal    @default(0) @db.Decimal(15, 2)
+  status           PostStatus @default(DRAFT)
+  isPostingForSelf Boolean    @default(true)
+  adminComments    String?
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  proofs      ProofDocument[]
+  bankDetails BankDetail[]
+  donations   Donation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProofDocument {
+  id                String    @id @default(uuid())
+  url               String
+  isVisibleToPublic Boolean   @default(false)
+  postId            String
+  post              LumisPost @relation(fields: [postId], references: [id])
+  createdAt         DateTime  @default(now())
+}
+
+model BankDetail {
+  id            String    @id @default(uuid())
+  bankName      String
+  swiftCode     String?
+  accountNumber String
+  accountHolder String
+  postId        String
+  post          LumisPost @relation(fields: [postId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Donation {
+  id          String         @id @default(uuid())
+  amount      Decimal        @db.Decimal(15, 2)
+  isAnonymous Boolean        @default(false)
+  status      DonationStatus @default(PENDING)
+
+  donorId String
+  donor   User   @relation(fields: [donorId], references: [id])
+
+  postId String
+  post   LumisPost @relation(fields: [postId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id])
+  targetId   String?
+  targetType String?
+  payload    Json?
+  createdAt  DateTime @default(now())
 }
