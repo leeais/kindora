@@ -137,10 +137,14 @@ model LumisPost {
 
 model ProofDocument {
   id                String    @id @default(uuid())
-  url               String
   isVisibleToPublic Boolean   @default(false)
+
   postId            String
   post              LumisPost @relation(fields: [postId], references: [id])
+
+  mediaId           String    @unique // 1 Proof = 1 Media
+  media             PostMedia @relation(fields: [mediaId], references: [id])
+
   createdAt         DateTime  @default(now())
 }
 
@@ -158,6 +162,9 @@ model PostMedia {
   // Quan hệ với User (Ai là người upload)
   userId       String
   user         User       @relation(fields: [userId], references: [id])
+
+  // Quan hệ 1-1 với ProofDocument (Nếu media này được dùng làm proof)
+  proofDocument ProofDocument?
 
   createdAt    DateTime   @default(now())
 }

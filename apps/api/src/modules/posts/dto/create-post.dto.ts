@@ -14,6 +14,24 @@ export const CreatePostSchema = z.object({
     .positive('Số tiền phải lớn hơn 0'),
   isPostingForSelf: z.boolean().default(true),
   mediaIds: z.array(z.string().uuid()).optional(),
+  proofs: z
+    .array(
+      z.object({
+        mediaId: z.string().uuid('Media ID không hợp lệ'),
+        isVisibleToPublic: z.boolean().default(false),
+      }),
+    )
+    .optional(),
+  bankDetails: z
+    .object({
+      bankName: z.string({ required_error: 'Tên ngân hàng là bắt buộc' }),
+      accountNumber: z.string({ required_error: 'Số tài khoản là bắt buộc' }),
+      accountHolder: z.string({
+        required_error: 'Tên chủ tài khoản là bắt buộc',
+      }),
+      swiftCode: z.string().optional(),
+    })
+    .optional(),
 });
 
 export class CreatePostDto extends createZodDto(CreatePostSchema) {}
