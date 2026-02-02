@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 
 import { validate } from '@/common/configs/env.config';
 import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
+import { PrismaModule } from '@/db/prisma.module';
+import { UsersModule } from '@/modules/users/users.module';
 
 
 @Module({
@@ -15,12 +17,14 @@ import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
       isGlobal: true,
       cache: true,
     }),
+    PrismaModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(LoggerMiddleware).forRoutes('{*path}');
   }
 }

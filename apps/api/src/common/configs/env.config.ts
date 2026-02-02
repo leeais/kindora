@@ -5,8 +5,7 @@ export const envSchema = z.object({
     .enum(['development', 'production', 'test', 'staging'])
     .default('development'),
   PORT: z.coerce.number().default(3000),
-  // Thêm các biến environment khác tại đây
-  // KINDORA_DATABASE_URL: z.string().url(),
+  KINDORA_DATABASE_URL: z.string().url(),
 });
 
 export type Env = z.infer<typeof envSchema>;
