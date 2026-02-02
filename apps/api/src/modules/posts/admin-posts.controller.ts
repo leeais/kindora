@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
 
 import { UpdatePostStatusDto } from './dto/update-post-status.dto';
 import { PostsService } from './posts.service';
@@ -21,5 +21,9 @@ export class AdminPostsController {
     @Body() updatePostStatusDto: UpdatePostStatusDto,
   ) {
     return this.postsService.updateStatus(id, updatePostStatusDto);
+  }
+  @Get('proofs/:id/view')
+  async getProofUrl(@Param('id') id: string) {
+    return this.postsService.getProofUrl(id);
   }
 }

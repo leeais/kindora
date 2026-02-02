@@ -1,11 +1,14 @@
+
 import {
   S3Client,
   DeleteObjectCommand,
   CreateBucketCommand,
   HeadBucketCommand,
   PutBucketPolicyCommand,
+  GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'; // Import hàm ký URL
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -133,6 +136,11 @@ export class S3StorageProvider implements IStorageProvider {
   }
 
   async getSignedUrl(key: string): Promise<string> {
-    return `http://${this.endpoint}:${this.configService.get('MINIO_PORT')}/${this.bucket}/${key}`;
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    });
+    // Link có hiệu lực trong 15 phút (900 giây)
+    return getSignedUrl(this.client, command, { expiresIn: 900 });
   }
 }

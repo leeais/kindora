@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostQueryDto } from './dto/post-query.dto';
 import { UpdatePostStatusDto } from './dto/update-post-status.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 
+import { type IStorageProvider } from '@/common/providers/storage/storage.interface';
 import { buildWhereClause } from '@/common/utils/filter.util';
 import { paginate } from '@/common/utils/paginate.util';
 import { Prisma } from '@/db/generated/prisma/client';
@@ -13,7 +14,11 @@ import { PrismaService } from '@/db/prisma.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject('IStorageProvider')
+    private readonly storageProvider: IStorageProvider,
+  ) {}
 
   async create(authorId: string, data: CreatePostDto) {
     const { mediaIds, proofs, bankDetails, ...postData } = data;
@@ -210,6 +215,29 @@ export class PostsService {
         throw new NotFoundException(`Bài đăng với ID "${id}" không tồn tại`);
       }
       throw error;
+    }
+  }
+  async getProofUrl(id: string) {
+    const proof = await this.prisma.proofDocument.findUnique({
+      where: { id },
+      include: {
+        media: true,
+      },
+    });
+
+    if (!proof) {
+      throw new NotFoundException(`Minh chứng với ID "${id}" không tồn tại`);
+    }
+
+    try {
+      const urlObj = new URL(proof.media.url);
+      const pathParts = urlObj.pathname.split('/');
+      // pathParts[0] is empty, pathParts[1] is bucket
+      const key = pathParts.slice(2).join('/');
+      const url = await this.storageProvider.getSignedUrl(key);
+      return { url };
+    } catch (_error) {
+      return { url: proof.media.url };
     }
   }
 }
