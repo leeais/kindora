@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "author": "",
   "scripts": {
-    "build": "nest build",
+    "build": "pnpm prisma:generate && nest build",
     "db:down": "docker-compose down",
     "db:shell": "docker exec -it kindora-db psql -U postgres -d kindora",
     "db:up": "docker-compose up -d",
@@ -17,7 +17,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main",
     "test": "jest",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",

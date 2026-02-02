@@ -21,11 +21,11 @@ async function bootstrap() {
   const nodeEnv = configService.get<string>('NODE_ENV');
 
   app.setGlobalPrefix('api', {
-    exclude: ['healthy'],
+    exclude: ['healthz'],
   });
 
   await app.listen(port ?? 8080, async () => {
-    const logger = new Logger(nodeEnv?.toUpperCase() as string);
+    const logger = new Logger(`MODE:${nodeEnv?.toUpperCase()}`);
     logger.log(`Application is running on: ${await app.getUrl()}`);
   });
 }
