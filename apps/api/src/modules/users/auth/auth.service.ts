@@ -19,6 +19,7 @@ import {
 } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdatePasswordDto as UpdatePasswordDtoOriginal } from './dto/update-password.dto';
 
 import type { Request } from 'express';
 
@@ -255,6 +256,38 @@ export class AuthService {
     return { resetToken };
   }
 
+  async updatePassword(userId: string, dto: UpdatePasswordDtoOriginal) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.password) {
+      throw new UnauthorizedException('Người dùng không hợp lệ');
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      dto.oldPassword,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Mật khẩu cũ không chính xác');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedPassword },
+      }),
+      this.prisma.session.deleteMany({
+        where: { userId },
+      }),
+    ]);
+
+    return { message: 'Cập nhật mật khẩu thành công' };
+  }
+
   async resetPassword(dto: ResetPasswordDto) {
     try {
       const payload = await this.jwtService.verifyAsync(dto.resetToken, {
@@ -313,7 +346,7 @@ export class AuthService {
     });
 
     // TODO: Gửi email ở đây
-     
+
     console.log(`[Verification Code for ${email}]: ${code}`);
 
     return code;

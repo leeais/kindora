@@ -10,7 +10,10 @@ import {
   Res,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
 
 import { AuthService } from './auth.service';
 import {
@@ -20,18 +23,23 @@ import {
 } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { ResendVerificationDto, VerifyEmailDto } from './dto/verify-email.dto';
+
+import type { Request, Response } from 'express';
+
 import {
   GoogleAuthGuard,
   JwtAuthGuard,
   JwtRefreshGuard,
-} from './guards/auth.guard';
-
-import type { Request, Response } from 'express';
+} from '@/modules/users/auth/guards/auth.guard';
 
 @Controller('users/auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private configService: ConfigService,
+  ) {}
 
   @Post('register')
   async register(
@@ -88,6 +96,14 @@ export class AuthController {
     return this.authService.resetPassword(dto);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Patch('update-password')
+  async updatePassword(@Req() req: Request, @Body() dto: UpdatePasswordDto) {
+    const userId = (req.user as any).userId;
+    return this.authService.updatePassword(userId, dto);
+  }
+
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -113,7 +129,7 @@ export class AuthController {
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
       sameSite: 'lax',
       path: '/',
     });
@@ -137,17 +153,18 @@ export class AuthController {
     result: {
       refreshToken: string;
       user: { id: string; email: string; [key: string]: any };
-    }, // Keeping [key: string]: any as it implies dynamic properties
+    },
   ) {
     const { refreshToken, ...response } = result;
 
-    const expiresAt = process.env.JWT_REFRESH_SECRET_EXPIRES_IN || '7d';
+    const expiresAt =
+      this.configService.get<string>('JWT_REFRESH_SECRET_EXPIRES_IN') || '7d';
 
     const maxAge = this.handleCalcExpiresAt(expiresAt);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
       sameSite: 'lax',
       path: '/',
       maxAge,
@@ -162,18 +179,20 @@ export class AuthController {
   ) {
     const { refreshToken, accessToken, expiresAt } = result;
 
-    const expiresAtRefresh = process.env.JWT_REFRESH_SECRET_EXPIRES_IN || '7d';
+    const expiresAtRefresh =
+      this.configService.get<string>('JWT_REFRESH_SECRET_EXPIRES_IN') || '7d';
     const maxAge = this.handleCalcExpiresAt(expiresAtRefresh);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
       sameSite: 'lax',
       path: '/',
       maxAge,
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
     return res.redirect(
       `${frontendUrl}/auth/callback?accessToken=${accessToken}&expiresAt=${expiresAt}`,
     );

@@ -1,6 +1,8 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
+import { PasswordSchema } from '@/common/dto/password.dto';
+
 export const ForgotPasswordSchema = z.object({
   email: z.string().email('Email không hợp lệ'),
 });
@@ -17,10 +19,8 @@ export class VerifyResetCodeDto extends createZodDto(VerifyResetCodeSchema) {}
 export const ResetPasswordSchema = z
   .object({
     resetToken: z.string({ required_error: 'Reset token là bắt buộc' }),
-    password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
-    confirmPassword: z
-      .string()
-      .min(6, 'Mật khẩu xác nhận phải có ít nhất 6 ký tự'),
+    password: PasswordSchema,
+    confirmPassword: PasswordSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Mật khẩu xác nhận không khớp',
