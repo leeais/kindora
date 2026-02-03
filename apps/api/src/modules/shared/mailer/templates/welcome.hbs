@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <style>
+      .container {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+      }
+      .header {
+        color: #4caf50;
+        text-align: center;
+      }
+      .footer {
+        font-size: 12px;
+        color: #888;
+        text-align: center;
+        margin-top: 20px;
+      }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <h2 class='header'>Chào mừng bạn đến với Kindora!</h2>
+      <p>Chào {{name}},</p>
+      <p>Tài khoản của bạn đã được xác thực thành công. Cảm ơn bạn đã trở thành
+        một phần của cộng đồng Kindora - nơi những tấm lòng hảo tâm gặp gỡ những
+        hoàn cảnh cần giúp đỡ.</p>
+      <p>Bây giờ bạn có thể bắt đầu khám phá các bài viết quyên góp hoặc tạo bài
+        viết của riêng mình.</p>
+      <div style='text-align: center;'>
+        <a href='{{frontendUrl}}' class='button'>Bắt đầu ngay</a>
+      </div>
+      <hr style='border: none; border-top: 1px solid #eee; margin-top: 20px;' />
+      <p class='footer'>Kindora Team - Gieo mầm hy vọng</p>
+    </div>
+  </body>
+</html>

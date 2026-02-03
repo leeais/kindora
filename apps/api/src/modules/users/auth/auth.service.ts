@@ -25,6 +25,7 @@ import type { Request } from 'express';
 
 import { calcExpiresAt } from '@/common/utils/token.util';
 import { PrismaService } from '@/db/prisma.service';
+import { MailerService } from '@/modules/shared/mailer/mailer.service';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,7 @@ export class AuthService {
     private configService: ConfigService,
     @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
+    private mailerService: MailerService,
   ) {}
 
   async register(dto: RegisterDto, _userAgent?: string, _ipAddress?: string) {
@@ -209,6 +211,12 @@ export class AuthService {
       }),
     ]);
 
+    // Gửi email chào mừng
+    await this.mailerService.sendWelcomeEmail(
+      user.email,
+      `${user.firstName} ${user.lastName}`,
+    );
+
     return { message: 'Xác thực email thành công' };
   }
 
@@ -296,6 +304,9 @@ export class AuthService {
       }),
     ]);
 
+    // Gửi email thông báo đổi mật khẩu
+    await this.mailerService.sendPasswordChangedEmail(user.email);
+
     return { message: 'Cập nhật mật khẩu thành công' };
   }
 
@@ -328,6 +339,12 @@ export class AuthService {
         }),
       ]);
 
+      // Gửi email thông báo đổi mật khẩu
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (user) {
+        await this.mailerService.sendPasswordChangedEmail(user.email);
+      }
+
       return { message: 'Đặt lại mật khẩu thành công' };
     } catch {
       throw new UnauthorizedException('Token đã hết hạn hoặc không hợp lệ');
@@ -356,9 +373,11 @@ export class AuthService {
       },
     });
 
-    // TODO: Gửi email ở đây
-
-    console.log(`[Verification Code for ${email}]: ${code}`);
+    if (type === 'SIGNUP') {
+      await this.mailerService.sendVerificationCode(email, code);
+    } else if (type === 'PASSWORD_RESET') {
+      await this.mailerService.sendPasswordResetCode(email, code);
+    }
 
     return code;
   }

@@ -24,7 +24,12 @@
     "PAYMENT_BANK_ID",
     "PAYMENT_ACCOUNT_NO",
     "PAYMENT_ACCOUNT_NAME",
-    "PAYMENT_TEMPLATE"
+    "PAYMENT_TEMPLATE",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_USER",
+    "SMTP_PASS",
+    "SMTP_FROM"
   ],
   "tasks": {
     "build": {

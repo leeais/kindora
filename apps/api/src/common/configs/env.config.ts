@@ -42,6 +42,13 @@ export const envSchema = z.object({
   PAYMENT_ACCOUNT_NO: z.string(),
   PAYMENT_ACCOUNT_NAME: z.string(),
   PAYMENT_TEMPLATE: z.string(),
+
+  // Mailer
+  SMTP_HOST: z.string(),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_USER: z.string(),
+  SMTP_PASS: z.string(),
+  SMTP_FROM: z.string().email(),
 });
 
 export type Env = z.infer<typeof envSchema>;

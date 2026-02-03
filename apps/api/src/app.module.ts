@@ -8,6 +8,7 @@ import { ZodSerializerInterceptor } from 'nestjs-zod';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { MailerModule } from './modules/shared/mailer/mailer.module';
 import { AppQueueModule } from './modules/shared/queue/queue.module';
 
 import { validate } from '@/common/configs/env.config';
@@ -24,6 +25,7 @@ import { PostsModule } from '@/modules/posts/posts.module';
 import { ReportsModule } from '@/modules/reports/reports.module';
 import { UploadModule } from '@/modules/uploads/upload.module';
 import { UsersModule } from '@/modules/users/users.module';
+
 
 @Module({
   imports: [
@@ -48,6 +50,7 @@ import { UsersModule } from '@/modules/users/users.module';
     DashboardModule,
     ReportsModule,
     AppQueueModule,
+    MailerModule,
   ],
   controllers: [AppController],
   providers: [
