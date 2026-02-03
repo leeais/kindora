@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: kindora-db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - '${DB_PORT}:5432'
+    volumes:
+      - ../../.docker/db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: kindora-redis
+    ports:
+      - '${REDIS_PORT}:6379'
+    volumes:
+      - ../../.docker/redis_data:/data
+    restart: always
+
+  minio:
+    image: minio/minio:latest
+    container_name: kindora-minio
+    ports:
+      - '${MINIO_PORT}:9000'
+      - '${MINIO_CONSOLE_PORT}:9001'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - ../../.docker/minio_data:/data
+    command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
+    restart: always
+
+networks:
+  default:
+    name: kindora-network
