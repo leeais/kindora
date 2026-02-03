@@ -4,11 +4,12 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
   UseGuards,
-  ParseUUIDPipe,
+  UseInterceptors,
 } from '@nestjs/common';
 
 
@@ -20,14 +21,18 @@ import { CurrentUser } from '../users/auth/decorators/get-user.decorator';
 import { JwtAuthGuard } from '../users/auth/guards/auth.guard';
 import { EmailVerifiedGuard } from '../users/auth/guards/email-verified.guard';
 
+import { AuditLog } from '@/modules/shared/audit-log/audit-log.decorator';
+import { AuditLogInterceptor } from '@/modules/shared/audit-log/audit-log.interceptor';
 import { OwnershipGuard } from '@/modules/users/auth/guards/ownership.guard';
 
 @Controller('posts')
+@UseInterceptors(AuditLogInterceptor)
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
+  @AuditLog('CREATE_POST')
   create(
     @CurrentUser() user: Express.User,
     @Body() createPostDto: CreatePostDto,
@@ -47,6 +52,7 @@ export class PostsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, EmailVerifiedGuard, OwnershipGuard)
+  @AuditLog('UPDATE_POST')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updatePostDto: UpdatePostDto,
@@ -56,12 +62,14 @@ export class PostsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, OwnershipGuard)
+  @AuditLog('DELETE_POST')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.postsService.remove(id);
   }
 
   @Post(':id/like')
   @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
+  @AuditLog('TOGGLE_LIKE')
   toggleLike(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: Express.User,

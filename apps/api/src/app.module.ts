@@ -8,11 +8,12 @@ import { ZodSerializerInterceptor } from 'nestjs-zod';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuditLogInterceptor } from './modules/shared/audit-log/audit-log.interceptor';
+import { AuditLogModule } from './modules/shared/audit-log/audit-log.module';
 import { MailerModule } from './modules/shared/mailer/mailer.module';
 import { AppQueueModule } from './modules/shared/queue/queue.module';
 
 import { validate } from '@/common/configs/env.config';
-import { AuditLogInterceptor } from '@/common/interceptors/audit-log.interceptor';
 import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
 import { PrismaModule } from '@/db/prisma.module';
 import { CategoriesModule } from '@/modules/categories/categories.module';
@@ -51,6 +52,7 @@ import { UsersModule } from '@/modules/users/users.module';
     ReportsModule,
     AppQueueModule,
     MailerModule,
+    AuditLogModule,
   ],
   controllers: [AppController],
   providers: [

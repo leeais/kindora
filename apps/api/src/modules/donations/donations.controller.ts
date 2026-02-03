@@ -6,12 +6,15 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 
 import { DonationsService } from './donations.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
 
 import { PaginationDto } from '@/common/dto/pagination.dto';
+import { AuditLog } from '@/modules/shared/audit-log/audit-log.decorator';
+import { AuditLogInterceptor } from '@/modules/shared/audit-log/audit-log.interceptor';
 import { CurrentUser } from '@/modules/users/auth/decorators/get-user.decorator';
 import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { EmailVerifiedGuard } from '@/modules/users/auth/guards/email-verified.guard';
@@ -19,10 +22,12 @@ import { EmailVerifiedGuard } from '@/modules/users/auth/guards/email-verified.g
 
 @Controller('donations')
 @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
+@UseInterceptors(AuditLogInterceptor)
 export class DonationsController {
   constructor(private readonly donationsService: DonationsService) {}
 
   @Post()
+  @AuditLog('CREATE_DONATION')
   create(
     @CurrentUser() user: Express.User,
     @Body() createDonationDto: CreateDonationDto,
@@ -31,6 +36,7 @@ export class DonationsController {
   }
 
   @Post(':id/confirm')
+  @AuditLog('CONFIRM_DONATION')
   confirm(@Param('id') id: string) {
     return this.donationsService.confirm(id);
   }

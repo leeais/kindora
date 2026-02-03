@@ -3,17 +3,19 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
   Req,
   UnauthorizedException,
   UseGuards,
+  UseInterceptors,
   forwardRef,
-  Inject,
-  ParseUUIDPipe,
 } from '@nestjs/common';
+
 
 import { AuthService } from './auth/auth.service';
 import { Roles } from './auth/decorators/roles.decorator';
@@ -29,8 +31,11 @@ import { UsersService } from './users.service';
 import type { Request } from 'express';
 
 import { UserRole } from '@/db/generated/prisma/client';
+import { AuditLog } from '@/modules/shared/audit-log/audit-log.decorator';
+import { AuditLogInterceptor } from '@/modules/shared/audit-log/audit-log.interceptor';
 
 @Controller('users')
+@UseInterceptors(AuditLogInterceptor)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
@@ -41,6 +46,7 @@ export class UsersController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @AuditLog('CREATE_USER')
   async create(@Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.create(createUserDto);
     await this.authService.generateVerificationCode(
@@ -90,6 +96,7 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard, OwnershipGuard, EmailVerifiedGuard)
   @Patch(':id')
+  @AuditLog('UPDATE_USER')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -99,6 +106,7 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard, OwnershipGuard)
   @Delete(':id')
+  @AuditLog('DELETE_USER')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
   }
@@ -106,6 +114,7 @@ export class UsersController {
   @Patch(':id/role')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @AuditLog('UPDATE_USER_ROLE')
   updateRole(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateRoleDto: UpdateRoleDto,
