@@ -42,6 +42,8 @@ export const envSchema = z.object({
   PAYMENT_ACCOUNT_NO: z.string(),
   PAYMENT_ACCOUNT_NAME: z.string(),
   PAYMENT_TEMPLATE: z.string(),
+  MOMO_SECRET_KEY: z.string().optional(),
+  PAYOS_CHECKSUM_KEY: z.string().optional(),
 
   // Mailer
   SMTP_HOST: z.string(),
