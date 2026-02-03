@@ -3,6 +3,7 @@ import { join } from 'path';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
 
@@ -10,6 +11,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuditLogInterceptor } from './modules/shared/audit-log/audit-log.interceptor';
 import { AuditLogModule } from './modules/shared/audit-log/audit-log.module';
+import { CleanupModule } from './modules/shared/cleanup/cleanup.module';
 import { MailerModule } from './modules/shared/mailer/mailer.module';
 import { AppQueueModule } from './modules/shared/queue/queue.module';
 
@@ -35,6 +37,7 @@ import { UsersModule } from '@/modules/users/users.module';
       isGlobal: true,
       cache: true,
     }),
+    ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'public'),
       serveRoot: '/',
@@ -53,6 +56,7 @@ import { UsersModule } from '@/modules/users/users.module';
     AppQueueModule,
     MailerModule,
     AuditLogModule,
+    CleanupModule,
   ],
   controllers: [AppController],
   providers: [

@@ -31,11 +31,14 @@ export class DonationsService {
       throw new NotFoundException(`Bài đăng với ID "${postId}" không tồn tại`);
     }
 
-    // Chỉ cho phép quyên góp cho bài viết đã được duyệt hoặc đang mở
-    const allowedStatuses: string[] = [PostStatus.ACCEPTED, PostStatus.OPEN];
+    // 2. Chỉ cho phép quyên góp cho bài viết đã được duyệt hoặc đang mở
+    const allowedStatuses: PostStatus[] = [
+      PostStatus.ACCEPTED,
+      PostStatus.OPEN,
+    ];
     if (!allowedStatuses.includes(post.status)) {
       throw new BadRequestException(
-        'Bài đăng này hiện không nhận quyên góp (Status: ' + post.status + ')',
+        `Bài đăng này hiện không nhận quyên góp (Trạng thái: ${post.status})`,
       );
     }
 

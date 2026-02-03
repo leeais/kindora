@@ -11,7 +11,6 @@ import { buildWhereClause } from '@/common/utils/filter.util';
 import { paginate } from '@/common/utils/paginate.util';
 import { PrismaService } from '@/db/prisma.service';
 
-
 @Injectable()
 export class ReportsService {
   constructor(
@@ -149,17 +148,19 @@ export class ReportsService {
 
       // Nếu có 3 báo cáo được xác nhận, tự động SUSPEND bài viết
       if (reportCount >= 3) {
-        await this.prisma.lumisPost.update({
-          where: { id: report.targetId },
-          data: { status: 'SUSPENDED' },
-        });
-
-        // Gửi thông báo cho chủ bài viết (author)
         const post = await this.prisma.lumisPost.findUnique({
           where: { id: report.targetId },
-          select: { authorId: true, title: true },
+          select: { status: true, authorId: true, title: true, id: true },
         });
-        if (post) {
+
+        // Chỉ khóa nếu bài viết chưa giải ngân hoàn tất
+        if (post && post.status !== 'DELIVERED' && post.status !== 'CLOSED') {
+          await this.prisma.lumisPost.update({
+            where: { id: report.targetId },
+            data: { status: 'SUSPENDED' },
+          });
+
+          // Gửi thông báo cho chủ bài viết (author)
           await this.notificationsService.create({
             userId: post.authorId,
             title: 'Bài viết bị tạm khóa',

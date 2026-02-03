@@ -24,6 +24,7 @@ import { UpdatePasswordDto as UpdatePasswordDtoOriginal } from './dto/update-pas
 import type { Request } from 'express';
 
 import { calcExpiresAt } from '@/common/utils/token.util';
+import { UserContext } from '@/db/generated/prisma/client';
 import { PrismaService } from '@/db/prisma.service';
 import { MailerService } from '@/modules/shared/mailer/mailer.service';
 
@@ -111,6 +112,7 @@ export class AuthService {
       userId,
       session.id,
       user.role,
+      user.activeContext,
       user.emailVerifiedAt || undefined,
     );
     const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
@@ -151,6 +153,7 @@ export class AuthService {
       userId,
       sessionId,
       user.role,
+      user.activeContext,
       user.emailVerifiedAt || undefined,
     );
     const hashedRt = await bcrypt.hash(tokens.refreshToken, 10);
@@ -452,6 +455,7 @@ export class AuthService {
     userId: string,
     sessionId: string,
     role: string,
+    activeContext: UserContext,
     emailVerifiedAt?: Date,
   ) {
     const [at, rt] = await Promise.all([
@@ -460,6 +464,7 @@ export class AuthService {
           sub: userId,
           sessionId,
           role,
+          activeContext,
           emailVerifiedAt: emailVerifiedAt?.toISOString(),
         },
         {

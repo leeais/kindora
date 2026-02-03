@@ -9,7 +9,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { type IStorageProvider } from '@/common/providers/storage/storage.interface';
 import { buildWhereClause } from '@/common/utils/filter.util';
 import { paginate } from '@/common/utils/paginate.util';
-import { Prisma } from '@/db/generated/prisma/client';
+import { PostStatus, Prisma, UserContext } from '@/db/generated/prisma/client';
 import { PrismaService } from '@/db/prisma.service';
 
 
@@ -62,12 +62,37 @@ export class PostsService {
     });
   }
 
-  async findAll(query: PostQueryDto) {
+  async findAll(
+    query: PostQueryDto,
+    userId?: string,
+    activeContext?: UserContext,
+  ) {
     const { minTargetAmount, maxTargetAmount, ...filterQuery } = query;
 
     const where: Prisma.LumisPostWhereInput = buildWhereClause(filterQuery, {
       title: 'contains',
     });
+
+    // Logic Context:
+    if (activeContext === 'LUMIS' && userId) {
+      // Lumis: Chỉ xem bài của chính mình (mọi trạng thái)
+      where.authorId = userId;
+    } else {
+      // Kindora / Guest: Chỉ xem bài viết công khai (ACCEPTED, OPEN, COMPLETED...)
+      // Trừ khi query user muốn lọc status cụ thể (nhưng vẫn phải nằm trong public scope)
+      // Để đơn giản hóa, nếu không có status cụ thể, ta force public status.
+      if (!where.status) {
+        where.status = {
+          in: [
+            PostStatus.ACCEPTED,
+            PostStatus.OPEN,
+            PostStatus.COMPLETED,
+            PostStatus.DELIVERED,
+            PostStatus.CLOSED,
+          ],
+        };
+      }
+    }
 
     if (minTargetAmount) {
       where.targetAmount = {
@@ -221,44 +246,82 @@ export class PostsService {
   }
 
   async updateStatus(id: string, data: UpdatePostStatusDto) {
-    try {
-      const updatedPost = await this.prisma.lumisPost.update({
-        where: { id },
-        data,
-      });
+    const post = await this.prisma.lumisPost.findUnique({
+      where: { id },
+      select: { status: true, title: true, authorId: true, id: true },
+    });
 
-      // Gửi thông báo cho tác giả bài viết
-      let title = 'Cập nhật trạng thái bài viết';
-      let content = `Bài viết "${updatedPost.title}" của bạn đã chuyển sang trạng thái ${updatedPost.status}.`;
-      const type = 'POST_STATUS_UPDATED';
+    if (!post) {
+      throw new NotFoundException(`Bài đăng với ID "${id}" không tồn tại`);
+    }
 
-      if (updatedPost.status === 'ACCEPTED') {
-        title = 'Bài viết đã được duyệt!';
-        content = `Chúc mừng! Bài viết "${updatedPost.title}" đã được duyệt và bắt đầu nhận quyên góp.`;
-      } else if (updatedPost.status === 'REJECTED') {
-        title = 'Bài viết bị từ chối';
-        content = `Rất tiếc, bài viết "${updatedPost.title}" không được duyệt. Lý do: ${updatedPost.adminComments || 'Vui lòng kiểm tra lại nội dung.'}`;
-      }
+    // Kiểm tra tính hợp lệ của việc chuyển đổi trạng thái
+    this.validateStatusTransition(post.status, data.status);
 
-      await this.prisma.notification.create({
-        data: {
-          userId: updatedPost.authorId,
-          title,
-          content,
-          type,
-          metadata: { postId: updatedPost.id, status: updatedPost.status },
-        },
-      });
+    const updatedPost = await this.prisma.lumisPost.update({
+      where: { id },
+      data,
+    });
 
-      return updatedPost;
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
-      ) {
-        throw new NotFoundException(`Bài đăng với ID "${id}" không tồn tại`);
-      }
-      throw error;
+    // Gửi thông báo cho tác giả bài viết
+    let title = 'Cập nhật trạng thái bài viết';
+    let content = `Bài viết "${updatedPost.title}" của bạn đã chuyển sang trạng thái ${updatedPost.status}.`;
+    const type = 'POST_STATUS_UPDATED';
+
+    if (updatedPost.status === 'ACCEPTED') {
+      title = 'Bài viết đã được duyệt!';
+      content = `Chúc mừng! Bài viết "${updatedPost.title}" đã được duyệt và bắt đầu nhận quyên góp.`;
+    } else if (updatedPost.status === 'REJECTED') {
+      title = 'Bài viết bị từ chối';
+      content = `Rất tiếc, bài viết "${updatedPost.title}" không được duyệt. Lý do: ${updatedPost.adminComments || 'Vui lòng kiểm tra lại nội dung.'}`;
+    }
+
+    await this.prisma.notification.create({
+      data: {
+        userId: updatedPost.authorId,
+        title,
+        content,
+        type,
+        metadata: { postId: updatedPost.id, status: updatedPost.status },
+      },
+    });
+
+    return updatedPost;
+  }
+
+  private validateStatusTransition(
+    currentStatus: PostStatus,
+    nextStatus: PostStatus,
+  ) {
+    if (currentStatus === nextStatus) return;
+
+    const validTransitions: Record<PostStatus, PostStatus[]> = {
+      DRAFT: [PostStatus.PENDING],
+      PENDING: [PostStatus.ACCEPTED, PostStatus.REJECTED],
+      ACCEPTED: [
+        PostStatus.OPEN,
+        PostStatus.COMPLETED,
+        PostStatus.SUSPENDED,
+        PostStatus.REJECTED_AFTER_REPORT,
+      ],
+      REJECTED: [PostStatus.PENDING], // Có thể cho phép gửi lại sau khi sửa
+      OPEN: [
+        PostStatus.COMPLETED,
+        PostStatus.SUSPENDED,
+        PostStatus.REJECTED_AFTER_REPORT,
+      ],
+      SUSPENDED: [PostStatus.ACCEPTED, PostStatus.OPEN, PostStatus.COMPLETED],
+      REJECTED_AFTER_REPORT: [], // Bị khóa vĩnh viễn
+      COMPLETED: [PostStatus.DELIVERED, PostStatus.SUSPENDED],
+      DELIVERED: [PostStatus.CLOSED],
+      CLOSED: [],
+    };
+
+    const allowed = validTransitions[currentStatus];
+    if (!allowed || !allowed.includes(nextStatus)) {
+      throw new Error(
+        `Không thể chuyển trạng thái từ ${currentStatus} sang ${nextStatus}`,
+      );
     }
   }
   async updateUrgent(id: string, isUrgent: boolean) {

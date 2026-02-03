@@ -12,18 +12,18 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 
-
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostQueryDto } from './dto/post-query.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostsService } from './posts.service';
-import { CurrentUser } from '../users/auth/decorators/get-user.decorator';
-import { JwtAuthGuard } from '../users/auth/guards/auth.guard';
-import { EmailVerifiedGuard } from '../users/auth/guards/email-verified.guard';
 
 import { AuditLog } from '@/modules/shared/audit-log/audit-log.decorator';
 import { AuditLogInterceptor } from '@/modules/shared/audit-log/audit-log.interceptor';
+import { CurrentUser } from '@/modules/users/auth/decorators/get-user.decorator';
+import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
+import { EmailVerifiedGuard } from '@/modules/users/auth/guards/email-verified.guard';
 import { OwnershipGuard } from '@/modules/users/auth/guards/ownership.guard';
+
 
 @Controller('posts')
 @UseInterceptors(AuditLogInterceptor)
@@ -41,8 +41,8 @@ export class PostsController {
   }
 
   @Get()
-  findAll(@Query() query: PostQueryDto) {
-    return this.postsService.findAll(query);
+  findAll(@Query() query: PostQueryDto, @CurrentUser() user?: Express.User) {
+    return this.postsService.findAll(query, user?.userId, user?.activeContext);
   }
 
   @Get(':id')
