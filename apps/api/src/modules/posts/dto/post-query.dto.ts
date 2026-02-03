@@ -7,6 +7,11 @@ import { PostStatus } from '@/db/generated/prisma/client';
 export const PostQuerySchema = BaseQuerySchema.extend({
   title: z.string().optional(),
   status: z.nativeEnum(PostStatus).optional(),
+  isUrgent: z
+    .string()
+    .transform((val) => val === 'true')
+    .pipe(z.boolean())
+    .optional(),
   authorId: z.string().uuid().optional(),
   isPostingForSelf: z
     .string()

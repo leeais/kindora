@@ -83,6 +83,10 @@ export class PostsService {
       };
     }
 
+    if (query.isUrgent !== undefined) {
+      where.isUrgent = query.isUrgent;
+    }
+
     if (query.search) {
       where['OR'] = [
         { title: { contains: query.search, mode: 'insensitive' } },
@@ -257,6 +261,23 @@ export class PostsService {
       throw error;
     }
   }
+  async updateUrgent(id: string, isUrgent: boolean) {
+    try {
+      return await this.prisma.lumisPost.update({
+        where: { id },
+        data: { isUrgent },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Bài đăng với ID "${id}" không tồn tại`);
+      }
+      throw error;
+    }
+  }
+
   async getProofUrl(id: string) {
     const proof = await this.prisma.proofDocument.findUnique({
       where: { id },

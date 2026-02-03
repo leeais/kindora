@@ -131,6 +131,7 @@ model LumisPost {
   supportReceived  Decimal    @default(0) @db.Decimal(15, 2)
   status           PostStatus @default(DRAFT)
   isPostingForSelf Boolean    @default(true)
+  isUrgent         Boolean    @default(false)
   adminComments    String?
 
   authorId String

@@ -9,7 +9,6 @@ import { paginate } from '@/common/utils/paginate.util';
 import { Prisma } from '@/db/generated/prisma/client';
 import { PrismaService } from '@/db/prisma.service';
 
-
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -89,6 +88,39 @@ export class UsersService {
       }
       throw error;
     }
+  }
+
+  async getImpact(userId: string) {
+    const [donations, totalDonated] = await Promise.all([
+      this.prisma.donation.findMany({
+        where: { donorId: userId, status: 'SUCCESS' },
+        include: {
+          post: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+              supportReceived: true,
+              targetAmount: true,
+              medias: { take: 1, select: { url: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.donation.aggregate({
+        where: { donorId: userId, status: 'SUCCESS' },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const uniquePosts = new Set(donations.map((d) => d.postId));
+
+    return {
+      totalDonated: totalDonated._sum.amount || 0,
+      supportedPostsCount: uniquePosts.size,
+      history: donations,
+    };
   }
 
   async remove(id: string) {

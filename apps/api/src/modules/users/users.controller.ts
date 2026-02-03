@@ -15,7 +15,6 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 
-
 import { AuthService } from './auth/auth.service';
 import { Roles } from './auth/decorators/roles.decorator';
 import { JwtAuthGuard } from './auth/guards/auth.guard';
@@ -64,6 +63,16 @@ export class UsersController {
 
     const { password: _password, ...userWithoutPassword } = user;
     return userWithoutPassword;
+  }
+
+  @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
+  @Get('me/impact')
+  async getMyImpact(@Req() req: Request) {
+    const userPayload = req.user as { userId?: string };
+    if (!userPayload || !userPayload.userId)
+      throw new UnauthorizedException('Không tìm thấy người dùng');
+
+    return this.usersService.getImpact(userPayload.userId);
   }
 
   @Get()

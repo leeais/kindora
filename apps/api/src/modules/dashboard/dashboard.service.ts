@@ -14,6 +14,8 @@ export class DashboardService {
       totalDonations,
       pendingPosts,
       successDonationsAmount,
+      pendingDonationsAmount,
+      deliveredPostAmount,
     ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.lumisPost.count(),
@@ -23,14 +25,28 @@ export class DashboardService {
         where: { status: 'SUCCESS' },
         _sum: { amount: true },
       }),
+      this.prisma.donation.aggregate({
+        where: { status: 'PENDING' },
+        _sum: { amount: true },
+      }),
+      this.prisma.lumisPost.aggregate({
+        where: { status: 'DELIVERED' },
+        _sum: { supportReceived: true },
+      }),
     ]);
+
+    const totalAmountRaised = successDonationsAmount._sum.amount || 0;
+    const disbursedAmount = deliveredPostAmount._sum.supportReceived || 0;
 
     return {
       totalUsers,
       totalPosts,
       totalDonations,
       pendingPosts,
-      totalAmountRaised: successDonationsAmount._sum.amount || 0,
+      totalAmountRaised,
+      pendingDonationsAmount: pendingDonationsAmount._sum.amount || 0,
+      disbursedAmount,
+      inStockAmount: Number(totalAmountRaised) - Number(disbursedAmount),
     };
   }
 

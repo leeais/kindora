@@ -18,7 +18,6 @@ import { Roles } from '@/modules/users/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { RolesGuard } from '@/modules/users/auth/guards/roles.guard';
 
-
 @Controller('admin/posts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
@@ -43,5 +42,14 @@ export class AdminPostsController {
     @Body() createDeliveryDto: CreateDeliveryDto,
   ) {
     return this.postsService.createDelivery(id, createDeliveryDto);
+  }
+
+  @Patch(':id/urgent')
+  @Roles(UserRole.ADMIN)
+  updateUrgent(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('isUrgent') isUrgent: boolean,
+  ) {
+    return this.postsService.updateUrgent(id, isUrgent);
   }
 }
