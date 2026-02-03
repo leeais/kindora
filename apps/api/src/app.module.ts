@@ -11,12 +11,17 @@ import { AppService } from './app.service';
 import { AppQueueModule } from './modules/shared/queue/queue.module';
 
 import { validate } from '@/common/configs/env.config';
+import { AuditLogInterceptor } from '@/common/interceptors/audit-log.interceptor';
 import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
 import { PrismaModule } from '@/db/prisma.module';
+import { DashboardModule } from '@/modules/dashboard/dashboard.module';
 import { DonationsModule } from '@/modules/donations/donations.module';
+import { NotificationsModule } from '@/modules/notifications/notifications.module';
+import { PaymentsModule } from '@/modules/payments/payments.module';
 import { PostsModule } from '@/modules/posts/posts.module';
 import { UploadModule } from '@/modules/uploads/upload.module';
 import { UsersModule } from '@/modules/users/users.module';
+
 
 @Module({
   imports: [
@@ -27,13 +32,16 @@ import { UsersModule } from '@/modules/users/users.module';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'public'),
-      serveRoot: '/', // Hoặc có thể dùng '/public' tùy sở thích
+      serveRoot: '/',
     }),
     PrismaModule,
     UsersModule,
     PostsModule,
     UploadModule,
     DonationsModule,
+    NotificationsModule,
+    PaymentsModule,
+    DashboardModule,
     AppQueueModule,
   ],
   controllers: [AppController],
@@ -42,6 +50,10 @@ import { UsersModule } from '@/modules/users/users.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ZodSerializerInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditLogInterceptor,
     },
   ],
 })

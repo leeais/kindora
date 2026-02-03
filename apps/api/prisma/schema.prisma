@@ -71,6 +71,7 @@ model User {
   auditLogs         AuditLog[]
   sessions          Session[]
   socialAccounts    SocialAccount[]
+  notifications     Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,37 +137,37 @@ model LumisPost {
 }
 
 model ProofDocument {
-  id                String    @id @default(uuid())
-  isVisibleToPublic Boolean   @default(false)
+  id                String  @id @default(uuid())
+  isVisibleToPublic Boolean @default(false)
 
-  postId            String
-  post              LumisPost @relation(fields: [postId], references: [id])
+  postId String
+  post   LumisPost @relation(fields: [postId], references: [id])
 
-  mediaId           String    @unique // 1 Proof = 1 Media
-  media             PostMedia @relation(fields: [mediaId], references: [id])
+  mediaId String    @unique // 1 Proof = 1 Media
+  media   PostMedia @relation(fields: [mediaId], references: [id])
 
-  createdAt         DateTime  @default(now())
+  createdAt DateTime @default(now())
 }
 
 model PostMedia {
-  id           String     @id @default(uuid())
+  id           String    @id @default(uuid())
   url          String
   thumbnailUrl String?
   type         MediaType
-  metadata     Json?      // Lưu trữ { width, height, size, format }
+  metadata     Json? // Lưu trữ { width, height, size, format }
 
   // Quan hệ với Post (Optional để upload trước khi tạo post)
-  postId       String?
-  post         LumisPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String?
+  post   LumisPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   // Quan hệ với User (Ai là người upload)
-  userId       String
-  user         User       @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   // Quan hệ 1-1 với ProofDocument (Nếu media này được dùng làm proof)
   proofDocument ProofDocument?
 
-  createdAt    DateTime   @default(now())
+  createdAt DateTime @default(now())
 }
 
 model BankDetail {
@@ -206,4 +207,19 @@ model AuditLog {
   targetType String?
   payload    Json?
   createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id       String  @id @default(uuid())
+  title    String
+  content  String
+  type     String // e.g., "SYSTEM", "DONATION", "POST_STATUS"
+  metadata Json? // Lưu trữ { postId, donationId, ... }
+  isRead   Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

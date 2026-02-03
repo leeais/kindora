@@ -12,6 +12,7 @@ import {
   UseGuards,
   forwardRef,
   Inject,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 
@@ -22,7 +23,7 @@ import { EmailVerifiedGuard } from './auth/guards/email-verified.guard';
 import { OwnershipGuard } from './auth/guards/ownership.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto, UpdateRoleDto } from './dto/update-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UsersService } from './users.service';
 
@@ -54,7 +55,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
   @Get('me')
   async getMe(@Req() req: Request) {
-    const userPayload = req.user;
+    const userPayload = req.user as { userId?: string };
     if (!userPayload || !userPayload.userId)
       throw new UnauthorizedException('Không tìm thấy người dùng');
 
@@ -74,19 +75,32 @@ export class UsersController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, OwnershipGuard)
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard, OwnershipGuard, EmailVerifiedGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return this.usersService.update(id, updateUserDto);
   }
 
   @UseGuards(JwtAuthGuard, OwnershipGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
+  }
+
+  @Patch(':id/role')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  updateRole(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateRoleDto: UpdateRoleDto,
+  ) {
+    return this.usersService.update(id, updateRoleDto);
   }
 }
