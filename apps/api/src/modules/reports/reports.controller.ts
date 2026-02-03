@@ -26,7 +26,6 @@ import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { RolesGuard } from '@/modules/users/auth/guards/roles.guard';
 
 
-
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
@@ -38,11 +37,25 @@ export class ReportsController {
     return this.reportsService.create(user.userId, data);
   }
 
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  findMyReports(@Req() req: Request, @Query() query: ReportQueryDto) {
+    const user = req.user as { userId: string };
+    return this.reportsService.findMyReports(user.userId, query);
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   findAll(@Query() query: ReportQueryDto) {
     return this.reportsService.findAll(query);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.reportsService.findOne(id);
   }
 
   @Patch(':id/status')
