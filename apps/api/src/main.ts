@@ -9,8 +9,10 @@ import { ZodValidationPipe } from 'nestjs-zod';
 
 import { AppModule } from './app.module';
 
+import { RedisIoAdapter } from '@/common/adapters/redis-io.adapter';
 import { loggerConfig } from '@/common/configs/logger.config';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -21,6 +23,11 @@ async function bootstrap() {
   app.use(cookieParser());
   app.use(helmet());
   app.use(compression());
+
+  // Redis Adapter for WebSockets
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT');

@@ -26,6 +26,11 @@ export const envSchema = z.object({
   // Redis
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.coerce.number().default(6379),
+  REDIS_PASSWORD: z.string().optional(),
+  REDIS_URL: z.string().optional(), // For Cloud connection string
+
+  // Storage
+  STORAGE_DRIVER: z.enum(['minio', 'r2']).default('minio'),
 
   // MinIO
   MINIO_ENDPOINT: z.string().default('localhost'),
@@ -33,9 +38,16 @@ export const envSchema = z.object({
   MINIO_USE_SSL: z
     .preprocess((val) => val === 'true', z.boolean())
     .default(false),
-  MINIO_ACCESS_KEY: z.string(),
-  MINIO_SECRET_KEY: z.string(),
+  MINIO_ACCESS_KEY: z.string().optional(),
+  MINIO_SECRET_KEY: z.string().optional(),
   MINIO_BUCKET_NAME: z.string().default('kindora-media'),
+
+  // Cloudflare R2
+  R2_ENDPOINT: z.string().optional(),
+  R2_ACCESS_KEY: z.string().optional(),
+  R2_SECRET_KEY: z.string().optional(),
+  R2_BUCKET_NAME: z.string().default('kindora'),
+  R2_PUBLIC_URL: z.string().optional(),
 
   // Payment
   PAYMENT_BANK_ID: z.string(),

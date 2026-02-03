@@ -7,12 +7,21 @@ import { ConfigService } from '@nestjs/config';
   imports: [
     BullModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        redis: {
-          host: config.get('REDIS_HOST'),
-          port: config.get('REDIS_PORT'),
-        },
-      }),
+      useFactory: (config: ConfigService) => {
+        const url = config.get('REDIS_URL');
+        if (url) {
+          return {
+            redis: url, // Connect via Connection String (Upstash)
+          };
+        }
+        return {
+          redis: {
+            host: config.get('REDIS_HOST'),
+            port: config.get('REDIS_PORT'),
+            password: config.get('REDIS_PASSWORD'),
+          },
+        };
+      },
     }),
   ],
   exports: [BullModule],
