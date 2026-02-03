@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+
 import { AuthService } from './auth.service';
 import {
   ForgotPasswordDto,
@@ -43,11 +44,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(
-    @Body() dto: RegisterDto,
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async register(@Body() dto: RegisterDto, @Req() req: Request) {
     const userAgent = req.get('user-agent');
     const ipAddress = req.ip;
     const result = await this.authService.register(dto, userAgent, ipAddress);
@@ -101,7 +98,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Patch('update-password')
   async updatePassword(@Req() req: Request, @Body() dto: UpdatePasswordDto) {
-    const userId = (req.user as any).userId;
+    const userId = (req.user as { userId: string }).userId;
     return this.authService.updatePassword(userId, dto);
   }
 
@@ -153,7 +150,7 @@ export class AuthController {
     res: Response,
     result: {
       refreshToken: string;
-      user: { id: string; email: string; [key: string]: any };
+      user: { id: string; email: string; [key: string]: unknown };
     },
   ) {
     const { refreshToken, ...response } = result;
