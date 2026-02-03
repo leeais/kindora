@@ -39,14 +39,19 @@ export class MailerService {
       ? frontendUrlEnv.split(',')[0].trim()
       : '';
 
-    return this.sendMail(to, 'Xác thực tài khoản Kindora', './verification', {
-      code,
-      frontendUrl,
-    });
+    return this.sendMail(
+      to,
+      'Xác thực tài khoản Kindora',
+      './verification-code',
+      {
+        code,
+        frontendUrl,
+      },
+    );
   }
 
   async sendResetPasswordEmail(to: string, code: string) {
-    return this.sendMail(to, 'Yêu cầu đặt lại mật khẩu', './reset-password', {
+    return this.sendMail(to, 'Yêu cầu đặt lại mật khẩu', './password-reset', {
       code,
     });
   }

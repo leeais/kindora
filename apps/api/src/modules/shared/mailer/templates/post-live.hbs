@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <meta charset='utf-8' />
+    <title>Bài viết đã công khai</title>
+  </head>
+  <body>
+    <h1>Xin chào {{name}},</h1>
+    <p>Bài viết
+      <strong>{{postTitle}}</strong>
+      của bạn đã chính thức công khai!</p>
+    {{#if adminComments}}
+      <p>Nhận xét từ Admin: {{adminComments}}</p>
+    {{/if}}
+    <p>Trân trọng,<br />Đội ngũ Kindora</p>
+  </body>
+</html>
