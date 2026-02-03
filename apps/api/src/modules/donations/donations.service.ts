@@ -12,6 +12,7 @@ import { paginate } from '@/common/utils/paginate.util';
 import { PostStatus } from '@/db/generated/prisma/client';
 import { PrismaService } from '@/db/prisma.service';
 
+
 @Injectable()
 export class DonationsService {
   constructor(
@@ -32,10 +33,9 @@ export class DonationsService {
     }
 
     // 2. Chỉ cho phép quyên góp cho bài viết đã được duyệt hoặc đang mở
-    const allowedStatuses: PostStatus[] = [
-      PostStatus.ACCEPTED,
-      PostStatus.OPEN,
-    ];
+    // 2. Chỉ cho phép quyên góp cho bài viết đang mở (OPEN)
+    // Sửa đổi theo FSD: ACCEPTED là giai đoạn chờ cập nhật bank info, chưa được quyên góp
+    const allowedStatuses: PostStatus[] = [PostStatus.OPEN];
     if (!allowedStatuses.includes(post.status)) {
       throw new BadRequestException(
         `Bài đăng này hiện không nhận quyên góp (Trạng thái: ${post.status})`,
@@ -216,5 +216,32 @@ export class DonationsService {
     });
 
     return result;
+  }
+
+  async getUserImpact(userId: string) {
+    const donations = await this.prisma.donation.findMany({
+      where: {
+        donorId: userId,
+        status: 'SUCCESS',
+      },
+      select: {
+        amount: true,
+        postId: true,
+      },
+    });
+
+    const totalDonated = donations.reduce(
+      (sum, donation) => sum + Number(donation.amount),
+      0,
+    );
+
+    const distinctPosts = new Set(donations.map((d) => d.postId));
+    const livesImpacted = distinctPosts.size;
+
+    return {
+      totalDonated,
+      livesImpacted,
+      supportedStories: livesImpacted,
+    };
   }
 }

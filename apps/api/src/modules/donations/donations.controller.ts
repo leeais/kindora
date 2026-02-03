@@ -19,7 +19,6 @@ import { CurrentUser } from '@/modules/users/auth/decorators/get-user.decorator'
 import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { EmailVerifiedGuard } from '@/modules/users/auth/guards/email-verified.guard';
 
-
 @Controller('donations')
 @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
 @UseInterceptors(AuditLogInterceptor)
@@ -39,6 +38,12 @@ export class DonationsController {
   @AuditLog('CONFIRM_DONATION')
   confirm(@Param('id') id: string) {
     return this.donationsService.confirm(id);
+  }
+
+  @Get('impact')
+  @AuditLog('VIEW_IMPACT')
+  getUserImpact(@CurrentUser() user: Express.User) {
+    return this.donationsService.getUserImpact(user.userId);
   }
 
   @Get('my-donations')

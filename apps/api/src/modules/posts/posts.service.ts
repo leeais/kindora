@@ -11,6 +11,7 @@ import { buildWhereClause } from '@/common/utils/filter.util';
 import { paginate } from '@/common/utils/paginate.util';
 import { PostStatus, Prisma, UserContext } from '@/db/generated/prisma/client';
 import { PrismaService } from '@/db/prisma.service';
+import { MailerService } from '@/modules/shared/mailer/mailer.service';
 
 
 @Injectable()
@@ -19,31 +20,23 @@ export class PostsService {
     private prisma: PrismaService,
     @Inject('IStorageProvider')
     private readonly storageProvider: IStorageProvider,
+    private readonly mailerService: MailerService,
   ) {}
 
   async create(authorId: string, data: CreatePostDto) {
+    // ... existing create code ...
     const { mediaIds, proofs, bankDetails, ...postData } = data;
 
     return this.prisma.lumisPost.create({
       data: {
         ...postData,
         authorId,
-        status: 'PENDING', // Bài viết mới tạo luôn ở trạng thái chờ duyệt
+        status: 'PENDING',
         medias: mediaIds
-          ? {
-              connect: mediaIds.map((id) => ({ id })),
-            }
+          ? { connect: mediaIds.map((id) => ({ id })) }
           : undefined,
-        proofs: proofs
-          ? {
-              create: proofs,
-            }
-          : undefined,
-        bankDetails: bankDetails
-          ? {
-              create: [bankDetails], // BankDetail[] trong schema
-            }
-          : undefined,
+        proofs: proofs ? { create: proofs } : undefined,
+        bankDetails: bankDetails ? { create: [bankDetails] } : undefined,
       },
       include: {
         author: {
@@ -61,6 +54,8 @@ export class PostsService {
       },
     });
   }
+
+  // ... existing methods ...
 
   async findAll(
     query: PostQueryDto,
@@ -248,7 +243,9 @@ export class PostsService {
   async updateStatus(id: string, data: UpdatePostStatusDto) {
     const post = await this.prisma.lumisPost.findUnique({
       where: { id },
-      select: { status: true, title: true, authorId: true, id: true },
+      include: {
+        author: { select: { email: true, firstName: true, lastName: true } },
+      },
     });
 
     if (!post) {
@@ -268,12 +265,38 @@ export class PostsService {
     let content = `Bài viết "${updatedPost.title}" của bạn đã chuyển sang trạng thái ${updatedPost.status}.`;
     const type = 'POST_STATUS_UPDATED';
 
+    const recipientName = `${post.author.firstName} ${post.author.lastName}`;
+
     if (updatedPost.status === 'ACCEPTED') {
       title = 'Bài viết đã được duyệt!';
-      content = `Chúc mừng! Bài viết "${updatedPost.title}" đã được duyệt và bắt đầu nhận quyên góp.`;
+      content = `Chúc mừng! Bài viết "${updatedPost.title}" đã được duyệt và đang chờ cập nhật thông tin ngân hàng.`;
+
+      await this.mailerService.sendPostApprovedEmail(
+        post.author.email,
+        recipientName,
+        updatedPost.title,
+        updatedPost.adminComments || undefined,
+      );
+    } else if (updatedPost.status === 'OPEN') {
+      title = 'Bài viết đã được công khai!';
+      content = `Chúc mừng! Bài viết "${updatedPost.title}" đã chính thức công khai và bắt đầu nhận quyên góp.`;
+
+      await this.mailerService.sendPostLiveEmail(
+        post.author.email,
+        recipientName,
+        updatedPost.title,
+        updatedPost.adminComments || undefined,
+      );
     } else if (updatedPost.status === 'REJECTED') {
       title = 'Bài viết bị từ chối';
       content = `Rất tiếc, bài viết "${updatedPost.title}" không được duyệt. Lý do: ${updatedPost.adminComments || 'Vui lòng kiểm tra lại nội dung.'}`;
+
+      await this.mailerService.sendPostRejectedEmail(
+        post.author.email,
+        recipientName,
+        updatedPost.title,
+        updatedPost.adminComments || 'Không có lý do cụ thể',
+      );
     }
 
     await this.prisma.notification.create({

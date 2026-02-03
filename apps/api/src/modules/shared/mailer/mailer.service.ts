@@ -71,4 +71,58 @@ export class MailerService {
       },
     );
   }
+
+  async sendPostApprovedEmail(
+    to: string,
+    name: string,
+    postTitle: string,
+    adminComments?: string,
+  ) {
+    return this.sendMail(
+      to,
+      '🌸 Bài viết của bạn đã được duyệt! (Bước tiếp theo)',
+      './post-approved',
+      {
+        name,
+        postTitle,
+        adminComments,
+      },
+    );
+  }
+
+  async sendPostLiveEmail(
+    to: string,
+    name: string,
+    postTitle: string,
+    adminComments?: string,
+  ) {
+    return this.sendMail(
+      to,
+      '🌸 Bài viết của bạn đã chính thức công khai!',
+      './post-live',
+      {
+        name,
+        postTitle,
+        adminComments,
+      },
+    );
+  }
+
+  async sendPostRejectedEmail(
+    to: string,
+    name: string,
+    postTitle: string,
+    reason: string,
+  ) {
+    return this.sendMail(
+      to,
+      '🌸 Thông báo về bài viết của bạn trên Kindora',
+      './post-rejected',
+      {
+        name,
+        postTitle,
+        reason,
+      },
+    );
+  }
 }
