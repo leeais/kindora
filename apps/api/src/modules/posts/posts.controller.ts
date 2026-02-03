@@ -59,4 +59,13 @@ export class PostsController {
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.postsService.remove(id);
   }
+
+  @Post(':id/like')
+  @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
+  toggleLike(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: Express.User,
+  ) {
+    return this.postsService.toggleLike(user.userId, id);
+  }
 }

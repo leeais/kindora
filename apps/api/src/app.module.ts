@@ -14,11 +14,13 @@ import { validate } from '@/common/configs/env.config';
 import { AuditLogInterceptor } from '@/common/interceptors/audit-log.interceptor';
 import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
 import { PrismaModule } from '@/db/prisma.module';
+import { CommentsModule } from '@/modules/comments/comments.module';
 import { DashboardModule } from '@/modules/dashboard/dashboard.module';
 import { DonationsModule } from '@/modules/donations/donations.module';
 import { NotificationsModule } from '@/modules/notifications/notifications.module';
 import { PaymentsModule } from '@/modules/payments/payments.module';
 import { PostsModule } from '@/modules/posts/posts.module';
+import { ReportsModule } from '@/modules/reports/reports.module';
 import { UploadModule } from '@/modules/uploads/upload.module';
 import { UsersModule } from '@/modules/users/users.module';
 
@@ -37,11 +39,13 @@ import { UsersModule } from '@/modules/users/users.module';
     PrismaModule,
     UsersModule,
     PostsModule,
+    CommentsModule,
     UploadModule,
     DonationsModule,
     NotificationsModule,
     PaymentsModule,
     DashboardModule,
+    ReportsModule,
     AppQueueModule,
   ],
   controllers: [AppController],

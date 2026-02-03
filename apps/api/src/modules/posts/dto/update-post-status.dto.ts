@@ -9,6 +9,7 @@ export const UpdatePostStatusSchema = z.object({
     'OPEN',
     'SUSPENDED',
     'COMPLETED',
+    'DELIVERED',
     'CLOSED',
   ]),
   adminComments: z.string().optional(),

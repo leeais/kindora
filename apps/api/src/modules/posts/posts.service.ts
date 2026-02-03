@@ -1,5 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
+import { CreateDeliveryDto } from './dto/create-delivery.dto';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostQueryDto } from './dto/post-query.dto';
 import { UpdatePostStatusDto } from './dto/update-post-status.dto';
@@ -104,6 +105,12 @@ export class PostsService {
             },
           },
           medias: true,
+          _count: {
+            select: {
+              likes: true,
+              comments: true,
+            },
+          },
         },
       },
       {
@@ -131,6 +138,12 @@ export class PostsService {
         proofs: true,
         bankDetails: true,
         medias: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
       },
     });
 
@@ -236,8 +249,82 @@ export class PostsService {
       const key = pathParts.slice(2).join('/');
       const url = await this.storageProvider.getSignedUrl(key);
       return { url };
-    } catch (_error) {
+    } catch {
       return { url: proof.media.url };
     }
+  }
+
+  async toggleLike(userId: string, postId: string) {
+    const existingLike = await this.prisma.postLike.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    if (existingLike) {
+      await this.prisma.postLike.delete({
+        where: {
+          id: existingLike.id,
+        },
+      });
+      return { liked: false };
+    }
+
+    await this.prisma.postLike.create({
+      data: {
+        userId,
+        postId,
+      },
+    });
+    return { liked: true };
+  }
+
+  async createDelivery(postId: string, data: CreateDeliveryDto) {
+    const { content, mediaIds } = data;
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Tạo PostUpdate loại DELIVERY
+      const postUpdate = await tx.postUpdate.create({
+        data: {
+          content,
+          type: 'DELIVERY',
+          postId,
+          medias: {
+            connect: mediaIds.map((id: string) => ({ id })),
+          },
+        },
+      });
+
+      // 2. Cập nhật trạng thái bài viết sang DELIVERED
+      await tx.lumisPost.update({
+        where: { id: postId },
+        data: { status: 'DELIVERED' },
+      });
+
+      // 3. Lấy danh sách donors của bài viết này để thông báo
+      const donors = await tx.donation.findMany({
+        where: { postId, status: 'SUCCESS' },
+        distinct: ['donorId'],
+        select: { donorId: true },
+      });
+
+      // 4. Gửi thông báo cho từng donor
+      for (const donor of donors) {
+        await tx.notification.create({
+          data: {
+            userId: donor.donorId,
+            title: 'Hệ thống đã trao tặng thành công!',
+            content: `Bài viết bạn đóng góp đã được hệ thống trao tặng trực tiếp. Xem bằng chứng ngay!`,
+            type: 'DELIVERY_SUCCESS',
+            metadata: { postId, updateId: postUpdate.id },
+          },
+        });
+      }
+
+      return postUpdate;
+    });
   }
 }

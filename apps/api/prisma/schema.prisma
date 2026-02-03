@@ -33,7 +33,13 @@ enum PostStatus {
   SUSPENDED
   REJECTED_AFTER_REPORT
   COMPLETED
+  DELIVERED
   CLOSED
+}
+
+enum PostUpdateType {
+  GENERAL
+  DELIVERY
 }
 
 enum DonationStatus {
@@ -72,6 +78,9 @@ model User {
   sessions          Session[]
   socialAccounts    SocialAccount[]
   notifications     Notification[]
+  likes             PostLike[]
+  comments          Comment[]
+  reportsSubmitted  Report[]           @relation("ReportedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -131,6 +140,9 @@ model LumisPost {
   bankDetails BankDetail[]
   donations   Donation[]
   medias      PostMedia[]
+  likes       PostLike[]
+  comments    Comment[]
+  updates     PostUpdate[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -166,6 +178,10 @@ model PostMedia {
 
   // Quan hệ 1-1 với ProofDocument (Nếu media này được dùng làm proof)
   proofDocument ProofDocument?
+
+  // Quan hệ với PostUpdate
+  postUpdateId String?
+  postUpdate   PostUpdate? @relation(fields: [postUpdateId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 }
@@ -219,6 +235,70 @@ model Notification {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PostLike {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String
+  post   LumisPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
+model Comment {
+  id      String @id @default(uuid())
+  content String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String
+  post   LumisPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PostUpdate {
+  id      String         @id @default(uuid())
+  title   String?
+  content String
+  type    PostUpdateType @default(GENERAL)
+
+  postId String
+  post   LumisPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  medias PostMedia[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Report {
+  id      String  @id @default(uuid())
+  reason  String
+  details String?
+
+  reporterId String
+  reporter   User   @relation("ReportedBy", fields: [reporterId], references: [id])
+
+  targetId   String // ID của Post, Comment hoặc User bị report
+  targetType String // "POST", "COMMENT", "USER"
+
+  status String @default("PENDING") // PENDING, RESOLVED, REJECTED
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
