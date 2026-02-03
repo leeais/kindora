@@ -14,6 +14,8 @@ export const PostQuerySchema = BaseQuerySchema.extend({
     .pipe(z.boolean())
     .optional(),
   currency: z.string().optional(),
+  categoryId: z.string().uuid().optional(),
+  province: z.string().optional(),
   minTargetAmount: z.coerce.number().positive().optional(),
   maxTargetAmount: z.coerce.number().positive().optional(),
 });

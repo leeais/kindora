@@ -104,6 +104,7 @@ export class PostsService {
               avatar: true,
             },
           },
+          category: true,
           medias: true,
           _count: {
             select: {
@@ -135,6 +136,7 @@ export class PostsService {
             avatar: true,
           },
         },
+        category: true,
         proofs: true,
         bankDetails: true,
         medias: true,
@@ -216,10 +218,35 @@ export class PostsService {
 
   async updateStatus(id: string, data: UpdatePostStatusDto) {
     try {
-      return await this.prisma.lumisPost.update({
+      const updatedPost = await this.prisma.lumisPost.update({
         where: { id },
         data,
       });
+
+      // Gửi thông báo cho tác giả bài viết
+      let title = 'Cập nhật trạng thái bài viết';
+      let content = `Bài viết "${updatedPost.title}" của bạn đã chuyển sang trạng thái ${updatedPost.status}.`;
+      const type = 'POST_STATUS_UPDATED';
+
+      if (updatedPost.status === 'ACCEPTED') {
+        title = 'Bài viết đã được duyệt!';
+        content = `Chúc mừng! Bài viết "${updatedPost.title}" đã được duyệt và bắt đầu nhận quyên góp.`;
+      } else if (updatedPost.status === 'REJECTED') {
+        title = 'Bài viết bị từ chối';
+        content = `Rất tiếc, bài viết "${updatedPost.title}" không được duyệt. Lý do: ${updatedPost.adminComments || 'Vui lòng kiểm tra lại nội dung.'}`;
+      }
+
+      await this.prisma.notification.create({
+        data: {
+          userId: updatedPost.authorId,
+          title,
+          content,
+          type,
+          metadata: { postId: updatedPost.id, status: updatedPost.status },
+        },
+      });
+
+      return updatedPost;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&

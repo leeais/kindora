@@ -12,6 +12,10 @@ export const CreatePostSchema = z.object({
   targetAmount: z
     .number({ required_error: 'Số tiền mục tiêu là bắt buộc' })
     .positive('Số tiền phải lớn hơn 0'),
+  categoryId: z.string().uuid('Category ID không hợp lệ').optional(),
+  province: z.string().optional(),
+  district: z.string().optional(),
+  ward: z.string().optional(),
   isPostingForSelf: z.boolean().default(true),
   mediaIds: z.array(z.string().uuid()).optional(),
   proofs: z

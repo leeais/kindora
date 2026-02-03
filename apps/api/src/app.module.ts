@@ -14,6 +14,7 @@ import { validate } from '@/common/configs/env.config';
 import { AuditLogInterceptor } from '@/common/interceptors/audit-log.interceptor';
 import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
 import { PrismaModule } from '@/db/prisma.module';
+import { CategoriesModule } from '@/modules/categories/categories.module';
 import { CommentsModule } from '@/modules/comments/comments.module';
 import { DashboardModule } from '@/modules/dashboard/dashboard.module';
 import { DonationsModule } from '@/modules/donations/donations.module';
@@ -23,7 +24,6 @@ import { PostsModule } from '@/modules/posts/posts.module';
 import { ReportsModule } from '@/modules/reports/reports.module';
 import { UploadModule } from '@/modules/uploads/upload.module';
 import { UsersModule } from '@/modules/users/users.module';
-
 
 @Module({
   imports: [
@@ -39,6 +39,7 @@ import { UsersModule } from '@/modules/users/users.module';
     PrismaModule,
     UsersModule,
     PostsModule,
+    CategoriesModule,
     CommentsModule,
     UploadModule,
     DonationsModule,
