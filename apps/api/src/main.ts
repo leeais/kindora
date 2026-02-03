@@ -80,7 +80,6 @@ async function bootstrap() {
   await app.listen(port ?? 8080, async () => {
     const logger = new Logger(`MODE:${nodeEnv?.toUpperCase()}`);
     logger.log(`Application is running on: ${await app.getUrl()}`);
-    logger.log(`Swagger Docs available at: ${await app.getUrl()}/docs`);
   });
 }
 bootstrap();

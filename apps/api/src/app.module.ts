@@ -30,9 +30,11 @@ import { ReportsModule } from '@/modules/reports/reports.module';
 import { UploadModule } from '@/modules/uploads/upload.module';
 import { UsersModule } from '@/modules/users/users.module';
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({
+      envFilePath: ['.env.production', '.env'],
       validate,
       isGlobal: true,
       cache: true,

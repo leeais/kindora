@@ -10,8 +10,17 @@ import { ConfigService } from '@nestjs/config';
       useFactory: (config: ConfigService) => {
         const url = config.get('REDIS_URL');
         if (url) {
+          const parsedUrl = new URL(url);
           return {
-            redis: url, // Connect via Connection String (Upstash)
+            redis: {
+              host: parsedUrl.hostname,
+              port: Number(parsedUrl.port),
+              password: parsedUrl.password,
+              username: parsedUrl.username,
+              tls: {
+                servername: parsedUrl.hostname,
+              },
+            },
           };
         }
         return {
