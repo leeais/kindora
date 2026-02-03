@@ -14,7 +14,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-
 import { AuthService } from './auth.service';
 import {
   ForgotPasswordDto,
@@ -193,8 +192,10 @@ export class AuthController {
       maxAge,
     });
 
-    const frontendUrl =
+    const frontendUrlEnv =
       this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const frontendUrl = frontendUrlEnv.split(',')[0].trim();
+
     return res.redirect(
       `${frontendUrl}/auth/callback?accessToken=${accessToken}&expiresAt=${expiresAt}`,
     );

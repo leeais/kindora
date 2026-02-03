@@ -12,7 +12,6 @@ import { AppModule } from './app.module';
 import { loggerConfig } from '@/common/configs/logger.config';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: loggerConfig,
@@ -23,18 +22,32 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
 
-  // CORS
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('PORT');
+  const nodeEnv = configService.get<string>('NODE_ENV');
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+
+  // CORS Configuration
+  let corsOrigin: boolean | string | string[];
+
+  if (nodeEnv === 'development') {
+    // Development: Allow all origins that request data (Reflect request origin)
+    // This allows credentials to work unlike origin: '*'
+    corsOrigin = true;
+  } else {
+    // Production: Parse CSV of allowed origins
+    corsOrigin = frontendUrl
+      ? frontendUrl.split(',').map((url) => url.trim())
+      : ['http://localhost:3000'];
+  }
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: corsOrigin,
     credentials: true,
   });
 
   app.useGlobalPipes(new ZodValidationPipe());
   app.useGlobalInterceptors(new TransformInterceptor());
-
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT');
-  const nodeEnv = configService.get<string>('NODE_ENV');
 
   app.setGlobalPrefix('api', {
     exclude: ['healthz'],

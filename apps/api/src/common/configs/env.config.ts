@@ -21,7 +21,7 @@ export const envSchema = z.object({
   GOOGLE_CALLBACK_URL: z.string().url(),
 
   // Frontend
-  FRONTEND_URL: z.string().url(),
+  FRONTEND_URL: z.string(),
 
   // Redis
   REDIS_HOST: z.string().default('localhost'),

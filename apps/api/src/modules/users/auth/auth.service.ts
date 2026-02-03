@@ -10,7 +10,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
-
 import { UsersService } from '../users.service';
 import {
   ForgotPasswordDto,
@@ -377,9 +376,9 @@ export class AuthService {
     });
 
     if (type === 'SIGNUP') {
-      await this.mailerService.sendVerificationCode(email, code);
+      await this.mailerService.sendVerificationEmail(email, code);
     } else if (type === 'PASSWORD_RESET') {
-      await this.mailerService.sendPasswordResetCode(email, code);
+      await this.mailerService.sendResetPasswordEmail(email, code);
     }
 
     return code;

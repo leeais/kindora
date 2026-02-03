@@ -33,25 +33,30 @@ export class MailerService {
     }
   }
 
-  async sendVerificationCode(to: string, code: string) {
-    return this.sendMail(
-      to,
-      'Mã xác thực tài khoản Kindora',
-      './verification-code',
-      {
-        code,
-      },
-    );
+  async sendVerificationEmail(to: string, code: string) {
+    const frontendUrlEnv = this.configService.get<string>('FRONTEND_URL');
+    const frontendUrl = frontendUrlEnv
+      ? frontendUrlEnv.split(',')[0].trim()
+      : '';
+
+    return this.sendMail(to, 'Xác thực tài khoản Kindora', './verification', {
+      code,
+      frontendUrl,
+    });
   }
 
-  async sendPasswordResetCode(to: string, code: string) {
-    return this.sendMail(to, 'Đặt lại mật khẩu Kindora', './password-reset', {
+  async sendResetPasswordEmail(to: string, code: string) {
+    return this.sendMail(to, 'Yêu cầu đặt lại mật khẩu', './reset-password', {
       code,
     });
   }
 
   async sendWelcomeEmail(to: string, name: string) {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const frontendUrlEnv = this.configService.get<string>('FRONTEND_URL');
+    const frontendUrl = frontendUrlEnv
+      ? frontendUrlEnv.split(',')[0].trim()
+      : '';
+
     return this.sendMail(to, 'Chào mừng bạn đến với Kindora!', './welcome', {
       name,
       frontendUrl,
