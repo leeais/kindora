@@ -10,6 +10,7 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CategoriesService } from './categories.service';
 import { CategoryQueryDto } from './dto/category-query.dto';
@@ -24,6 +25,8 @@ import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { RolesGuard } from '@/modules/users/auth/guards/roles.guard';
 
 
+@ApiTags('Categories')
+@ApiBearerAuth()
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}

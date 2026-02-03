@@ -8,6 +8,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { DonationsService } from './donations.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
@@ -19,6 +20,9 @@ import { CurrentUser } from '@/modules/users/auth/decorators/get-user.decorator'
 import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { EmailVerifiedGuard } from '@/modules/users/auth/guards/email-verified.guard';
 
+
+@ApiTags('Donations')
+@ApiBearerAuth()
 @Controller('donations')
 @UseGuards(JwtAuthGuard, EmailVerifiedGuard)
 @UseInterceptors(AuditLogInterceptor)

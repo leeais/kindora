@@ -15,6 +15,7 @@ import {
   UseInterceptors,
   forwardRef,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 
 import { AuthService } from './auth/auth.service';
@@ -34,6 +35,8 @@ import { UserRole } from '@/db/generated/prisma/client';
 import { AuditLog } from '@/modules/shared/audit-log/audit-log.decorator';
 import { AuditLogInterceptor } from '@/modules/shared/audit-log/audit-log.interceptor';
 
+@ApiTags('Users')
+@ApiBearerAuth()
 @Controller('users')
 @UseInterceptors(AuditLogInterceptor)
 export class UsersController {

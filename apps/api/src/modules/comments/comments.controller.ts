@@ -9,6 +9,7 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CommentsService } from './comments.service';
 import { CommentQueryDto } from './dto/comment-query.dto';
@@ -19,6 +20,8 @@ import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { EmailVerifiedGuard } from '@/modules/users/auth/guards/email-verified.guard';
 
 
+@ApiTags('Comments')
+@ApiBearerAuth()
 @Controller('comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}

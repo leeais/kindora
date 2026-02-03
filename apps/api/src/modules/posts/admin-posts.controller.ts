@@ -8,6 +8,7 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CreateDeliveryDto } from './dto/create-delivery.dto';
 import { UpdatePostStatusDto } from './dto/update-post-status.dto';
@@ -18,6 +19,9 @@ import { Roles } from '@/modules/users/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { RolesGuard } from '@/modules/users/auth/guards/roles.guard';
 
+
+@ApiTags('Admin Posts')
+@ApiBearerAuth()
 @Controller('admin/posts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)

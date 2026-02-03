@@ -11,6 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import {
   CreateReportDto,
@@ -30,6 +31,8 @@ import { RolesGuard } from '@/modules/users/auth/guards/roles.guard';
 
 
 
+@ApiTags('Reports')
+@ApiBearerAuth()
 @Controller('reports')
 @UseInterceptors(AuditLogInterceptor)
 export class ReportsController {

@@ -11,6 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostQueryDto } from './dto/post-query.dto';
@@ -24,7 +25,8 @@ import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { EmailVerifiedGuard } from '@/modules/users/auth/guards/email-verified.guard';
 import { OwnershipGuard } from '@/modules/users/auth/guards/ownership.guard';
 
-
+@ApiTags('Posts')
+@ApiBearerAuth()
 @Controller('posts')
 @UseInterceptors(AuditLogInterceptor)
 export class PostsController {

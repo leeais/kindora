@@ -13,6 +13,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 
 import { AuthService } from './auth.service';
@@ -36,6 +37,8 @@ import {
   JwtRefreshGuard,
 } from '@/modules/users/auth/guards/auth.guard';
 
+@ApiTags('Auth')
+@ApiBearerAuth()
 @Controller('users/auth')
 export class AuthController {
   constructor(
