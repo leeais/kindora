@@ -12,7 +12,6 @@ import { paginate } from '@/common/utils/paginate.util';
 import { PostStatus } from '@/db/generated/prisma/client';
 import { PrismaService } from '@/db/prisma.service';
 
-
 @Injectable()
 export class DonationsService {
   constructor(
@@ -119,6 +118,17 @@ export class DonationsService {
         await tx.lumisPost.update({
           where: { id: donation.postId },
           data: { status: PostStatus.COMPLETED },
+        });
+
+        // Gửi thông báo cho Author
+        await tx.notification.create({
+          data: {
+            userId: updatedPost.authorId,
+            title: 'Bài viết đã đạt mục tiêu quyên góp!',
+            content: `Chúc mừng! Bài viết "${updatedPost.title}" của bạn đã nhận đủ ${updatedPost.supportReceived} ${updatedPost.currency}. Vui lòng chuẩn bị các bước trao quà tiếp theo.`,
+            type: 'POST_GOAL_ACHIEVED',
+            metadata: { postId: updatedPost.id },
+          },
         });
       }
 

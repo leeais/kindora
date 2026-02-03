@@ -319,7 +319,8 @@ model Report {
   targetId   String // ID của Post, Comment hoặc User bị report
   targetType String // "POST", "COMMENT", "USER"
 
-  status String @default("PENDING") // PENDING, RESOLVED, REJECTED
+  status    String  @default("PENDING") // PENDING, RESOLVED, REJECTED
+  adminNote String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

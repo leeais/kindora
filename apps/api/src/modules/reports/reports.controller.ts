@@ -1,24 +1,30 @@
 import {
-  Body,
   Controller,
   Get,
-  Param,
-  Patch,
   Post,
+  Patch,
+  Param,
+  Body,
   Query,
   UseGuards,
+  Req,
   ParseUUIDPipe,
 } from '@nestjs/common';
 
-import { CreateReportDto } from './dto/create-report.dto';
-import { ReportQueryDto } from './dto/report-query.dto';
+import {
+  CreateReportDto,
+  ReportQueryDto,
+  UpdateReportStatusDto,
+} from './dto/report.dto';
 import { ReportsService } from './reports.service';
 
+import type { Request } from 'express';
+
 import { UserRole } from '@/db/generated/prisma/client';
-import { CurrentUser } from '@/modules/users/auth/decorators/get-user.decorator';
 import { Roles } from '@/modules/users/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/modules/users/auth/guards/auth.guard';
 import { RolesGuard } from '@/modules/users/auth/guards/roles.guard';
+
 
 
 @Controller('reports')
@@ -27,28 +33,25 @@ export class ReportsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(
-    @CurrentUser() user: Express.User,
-    @Body() createReportDto: CreateReportDto,
-  ) {
-    return this.reportsService.create(user.userId, createReportDto);
+  create(@Req() req: Request, @Body() data: CreateReportDto) {
+    const user = req.user as { userId: string };
+    return this.reportsService.create(user.userId, data);
   }
 
-  // Admin endpoints
-  @Get('admin')
+  @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   findAll(@Query() query: ReportQueryDto) {
     return this.reportsService.findAll(query);
   }
 
-  @Patch('admin/:id/resolve')
+  @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  resolve(
+  updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body('status') status: 'RESOLVED' | 'REJECTED',
+    @Body() data: UpdateReportStatusDto,
   ) {
-    return this.reportsService.resolve(id, status);
+    return this.reportsService.updateStatus(id, data);
   }
 }
