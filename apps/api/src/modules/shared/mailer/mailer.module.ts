@@ -11,27 +11,35 @@ import { MailerService } from './mailer.service';
 @Module({
   imports: [
     NestMailerModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
-        transport: {
-          host: configService.get<string>('SMTP_HOST'),
-          port: configService.get<number>('SMTP_PORT'),
-          secure: configService.get<number>('SMTP_PORT') === 465,
-          auth: {
-            user: configService.get<string>('SMTP_USER'),
-            pass: configService.get<string>('SMTP_PASS'),
+      useFactory: (configService: ConfigService) => {
+        const host = configService.get<string>('SMTP_HOST');
+        const port = configService.get('SMTP_PORT');
+        const user = configService.get<string>('SMTP_USER');
+        const pass = configService.get<string>('SMTP_PASS');
+        const secure = Number(port) === 465;
+
+        return {
+          transport: {
+            service: 'gmail',
+            auth: {
+              user,
+              pass,
+            },
+            logger: true,
+            debug: true,
           },
-        },
-        defaults: {
-          from: `"Kindora Support" <${configService.get<string>('SMTP_FROM')}>`,
-        },
-        template: {
-          dir: join(__dirname, 'templates'),
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
+          defaults: {
+            from: `"Kindora Support" <${configService.get<string>('SMTP_FROM')}>`,
           },
-        },
-      }),
+          template: {
+            dir: join(__dirname, 'templates'),
+            adapter: new HandlebarsAdapter(),
+            options: {
+              strict: true,
+            },
+          },
+        };
+      },
       inject: [ConfigService],
     }),
   ],
