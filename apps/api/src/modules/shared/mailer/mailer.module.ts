@@ -20,13 +20,15 @@ import { MailerService } from './mailer.service';
 
         return {
           transport: {
-            service: 'gmail',
+            host,
+            port,
+            secure,
             auth: {
               user,
               pass,
             },
-            logger: true,
-            debug: true,
+            logger: configService.get<string>('NODE_ENV') !== 'production',
+            debug: configService.get<string>('NODE_ENV') !== 'production',
           },
           defaults: {
             from: `"Kindora Support" <${configService.get<string>('SMTP_FROM')}>`,
