@@ -15,7 +15,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-
 import { AuthService } from './auth.service';
 import {
   ForgotPasswordDto,
@@ -197,7 +196,7 @@ export class AuthController {
     const frontendUrl = frontendUrlEnv.split(',')[0].trim();
 
     return res.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${accessToken}&expiresAt=${expiresAt}`,
+      `${frontendUrl}/google/callback?accessToken=${accessToken}&expiresAt=${expiresAt}`,
     );
   }
 }

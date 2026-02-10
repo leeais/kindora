@@ -81,11 +81,11 @@ export class AuthService {
       throw new UnauthorizedException('Thông tin đăng nhập không chính xác');
     }
 
-    if (!user.emailVerifiedAt) {
-      throw new UnauthorizedException(
-        'Email chưa được xác thực. Vui lòng xác thực email để đăng nhập.',
-      );
-    }
+    // if (!user.emailVerifiedAt) {
+    //   throw new UnauthorizedException(
+    //     'Email chưa được xác thực. Vui lòng xác thực email để đăng nhập.',
+    //   );
+    // }
 
     return this.createSession(user.id, userAgent, ipAddress);
   }
